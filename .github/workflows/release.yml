@@ -1,0 +1,117 @@
+# Version Bump — debate-board-website
+#
+# Runs on every push to main. Reads conventional commit messages since the
+# last tag, computes the next semver, and creates a GitHub Release.
+#
+# Bump rules (first match wins, evaluated across ALL commits since last tag):
+#   feat!: or feat(<scope>)!:   → major
+#   feat:  or feat(<scope>):    → minor
+#   fix / chore / ci / refactor / perf / test  → patch
+#   docs / doc                  → no bump (tag not created)
+#
+# If every commit since the last tag is docs/doc only, no tag is pushed.
+# If there are no commits at all since the last tag, no tag is pushed.
+#
+# Required permissions: contents:write (to push the tag).
+# No extra secrets needed — uses the automatic GITHUB_TOKEN.
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'
+
+jobs:
+  bump:
+    name: Compute and push next version tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version and push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # ── 1. Find the latest semver tag ───────────────────────────────────
+          LATEST=$(git tag -l 'v*' | sort -V | tail -1)
+          if [ -z "$LATEST" ]; then
+            LATEST="v0.0.0"
+            echo "No existing tag found; baseline is $LATEST"
+          else
+            echo "Latest tag: $LATEST"
+          fi
+
+          # ── 2. Collect commit subjects since that tag ───────────────────────
+          if [ "$LATEST" = "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"%s" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%s" "${LATEST}..HEAD")
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits since $LATEST — nothing to bump."
+            exit 0
+          fi
+
+          echo "Commits since $LATEST:"
+          echo "$COMMITS"
+
+          # ── 3. Determine bump level ─────────────────────────────────────────
+          BUMP="none"
+
+          while IFS= read -r msg; do
+            # Breaking change: any type with ! before :
+            if echo "$msg" | grep -qE '^[a-z]+(\([^)]*\))?!:'; then
+              BUMP="major"
+              break
+            fi
+            # Minor: feat or feat(<scope>)
+            if echo "$msg" | grep -qE '^feat(\([^)]*\))?:'; then
+              [ "$BUMP" != "major" ] && BUMP="minor"
+            fi
+            # Patch: fix, chore, ci, refactor, perf, test
+            if echo "$msg" | grep -qE '^(fix|chore|ci|refactor|perf|test)(\([^)]*\))?:'; then
+              [ "$BUMP" = "none" ] && BUMP="patch"
+            fi
+            # docs / doc → no bump
+          done <<< "$COMMITS"
+
+          if [ "$BUMP" = "none" ]; then
+            echo "Only non-bumping commits (docs/doc) since $LATEST — skipping tag."
+            exit 0
+          fi
+
+          echo "Bump level: $BUMP"
+
+          # ── 4. Parse current version ────────────────────────────────────────
+          VERSION="${LATEST#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+
+          # ── 5. Compute next version ─────────────────────────────────────────
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEXT="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "Next version: $NEXT"
+
+          # ── 6. Push the tag ─────────────────────────────────────────────────
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$NEXT"
+          git push origin "$NEXT"
+          echo "Pushed tag $NEXT."
