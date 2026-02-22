@@ -1,0 +1,22 @@
+steps:
+  - id: Build
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        docker build \
+          --build-arg VITE_DEBATE_BOARD_API_URL=https://debate-board-service-qfq3w5kpra-eu.a.run.app/query \
+          --build-arg VITE_DEBATE_BOARD_WS_URL=wss://debate-board-service-qfq3w5kpra-eu.a.run.app/query \
+          --build-arg VITE_USER_SERVICE_API_URL=https://user-service-qfq3w5kpra-eu.a.run.app/query \
+          -t $_IMAGE_NAME \
+          .
+
+images:
+  - $_IMAGE_NAME
+
+# _IMAGE_NAME must be passed via --substitutions when running manually.
+# Example:
+#   gcloud builds submit \
+#     --substitutions=_IMAGE_NAME=asia-southeast3-docker.pkg.dev/PROJECT/cloud-run-source-deploy/debate-board-website/debate-board-website:TAG \
+#     .
