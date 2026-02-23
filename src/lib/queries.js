@@ -163,6 +163,7 @@ export const GET_PROPOSALS = gql`
       userAlias
       title
       description
+      features
       status
       aiFeedback
       aiRecommendation
@@ -193,6 +194,7 @@ export const GET_PROPOSAL = gql`
       userAlias
       title
       description
+      features
       status
       aiFeedback
       aiRecommendation
@@ -216,10 +218,11 @@ export const GET_PROPOSAL = gql`
 `;
 
 export const CREATE_PROPOSAL = gql`
-  mutation CreateProposal($title: String!, $description: String!) {
-    createProposal(title: $title, description: $description) {
+  mutation CreateProposal($title: String!, $description: String!, $features: [String!]) {
+    createProposal(title: $title, description: $description, features: $features) {
       id
       title
+      features
       status
     }
   }
@@ -256,6 +259,18 @@ export const ADD_PROPOSAL_ARGUMENT = gql`
       content
       createdAt
     }
+  }
+`;
+
+export const UPDATE_PROPOSAL_FEATURES = gql`
+  mutation UpdateProposalFeatures($id: ID!, $features: [String!]!) {
+    updateProposalFeatures(id: $id, features: $features)
+  }
+`;
+
+export const UPDATE_DEBATE_BOARD_FEATURES = gql`
+  mutation UpdateDebateBoardFeatures($id: ID!, $features: [String!]!) {
+    updateDebateBoardFeatures(id: $id, features: $features)
   }
 `;
 
@@ -300,6 +315,7 @@ export const GET_USER_ACTIVITY = gql`
         userAlias
         title
         description
+        features
         status
         aiFeedback
         aiRecommendation

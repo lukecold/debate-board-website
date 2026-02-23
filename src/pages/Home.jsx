@@ -15,6 +15,7 @@ import {
   ADMIN_ADOPT_PROPOSAL,
   ADMIN_REJECT_PROPOSAL,
   TRANSLATE_CONTENT,
+  UPDATE_PROPOSAL_FEATURES,
 } from '../lib/queries';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -31,8 +32,11 @@ export default function Home() {
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
+  const [proposalFeatures, setProposalFeatures] = useState('');
   const [expandedProposal, setExpandedProposal] = useState(null);
   const [proposalArgText, setProposalArgText] = useState('');
+  const [editingFeaturesProposalId, setEditingFeaturesProposalId] = useState(null);
+  const [editFeaturesText, setEditFeaturesText] = useState('');
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -80,6 +84,7 @@ export default function Home() {
       setShowProposalForm(false);
       setProposalTitle('');
       setProposalDescription('');
+      setProposalFeatures('');
       refetchProposals();
     },
   });
@@ -105,6 +110,14 @@ export default function Home() {
 
   const [adminRejectProposal] = useMutation(ADMIN_REJECT_PROPOSAL, {
     onCompleted: () => refetchProposals(),
+  });
+
+  const [updateProposalFeatures] = useMutation(UPDATE_PROPOSAL_FEATURES, {
+    onCompleted: () => {
+      setEditingFeaturesProposalId(null);
+      setEditFeaturesText('');
+      refetchProposals();
+    },
   });
 
   const [translateContentMutation] = useMutation(TRANSLATE_CONTENT);
@@ -141,13 +154,28 @@ export default function Home() {
   const handleCreateProposal = (e) => {
     e.preventDefault();
     if (!proposalTitle.trim() || !proposalDescription.trim()) return;
+    const featuresArray = proposalFeatures.split(',').map(f => f.trim()).filter(Boolean);
     createProposal({
-      variables: { title: proposalTitle, description: proposalDescription },
+      variables: {
+        title: proposalTitle,
+        description: proposalDescription,
+        features: featuresArray.length > 0 ? featuresArray : undefined,
+      },
     });
   };
 
   const handleVoteProposal = (proposalID, voteType) => {
     voteOnProposal({ variables: { proposalID, voteType } });
+  };
+
+  const handleEditFeatures = (proposal) => {
+    setEditingFeaturesProposalId(proposal.id);
+    setEditFeaturesText((proposal.features || []).join(', '));
+  };
+
+  const handleSaveProposalFeatures = (proposalId) => {
+    const features = editFeaturesText.split(',').map(f => f.trim()).filter(Boolean);
+    updateProposalFeatures({ variables: { id: proposalId, features } });
   };
 
   const handleDeleteProposal = (proposalID) => {
@@ -410,6 +438,12 @@ export default function Home() {
               rows={4}
               required
             />
+            <input
+              type="text"
+              placeholder={t('home.boardFeaturesPlaceholder')}
+              value={proposalFeatures}
+              onChange={(e) => setProposalFeatures(e.target.value)}
+            />
             <button type="submit" className="btn-primary" disabled={creatingProposal}>
               {creatingProposal ? t('home.submitting') : t('home.submitProposal')}
             </button>
@@ -448,6 +482,27 @@ export default function Home() {
                   <span className="proposal-author">
                     by {proposal.userAlias || 'Anonymous'} &middot; {new Date(proposal.createdAt).toLocaleDateString()}
                   </span>
+                  {(proposal.features && proposal.features.length > 0 || isAdmin) && (
+                    <div className="board-card-tags">
+                      {(proposal.features || []).map(f => <span key={f} className="tag-chip">{tTag(f)}</span>)}
+                      {isAdmin && editingFeaturesProposalId === proposal.id ? (
+                        <span className="inline-features-edit">
+                          <input
+                            type="text"
+                            value={editFeaturesText}
+                            onChange={(e) => setEditFeaturesText(e.target.value)}
+                            placeholder="tag1, tag2, ..."
+                            className="features-edit-input"
+                            autoFocus
+                          />
+                          <button className="btn-admin btn-small" onClick={() => handleSaveProposalFeatures(proposal.id)}>&#10003;</button>
+                          <button className="btn-secondary btn-small" onClick={() => setEditingFeaturesProposalId(null)}>&#10005;</button>
+                        </span>
+                      ) : isAdmin && (
+                        <button className="btn-edit-tags" onClick={() => handleEditFeatures(proposal)} title="Edit features">&#9998;</button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="proposal-card-badges">
                   {proposal.aiRecommendation && (

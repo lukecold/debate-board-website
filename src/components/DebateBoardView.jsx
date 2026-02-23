@@ -15,6 +15,7 @@ import {
   TOGGLE_FAVOURITE,
   TRANSLATE_CONTENT,
   RETRANSLATE_CONTENT,
+  UPDATE_DEBATE_BOARD_FEATURES,
 } from '../lib/queries';
 import ArgumentList from './ArgumentList';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,7 +24,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 export default function DebateBoardView({ boardId }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t, language, targetLanguage } = useLanguage();
+  const { t, tTag, language, targetLanguage } = useLanguage();
   const userId = user.id;
   const [newArgument, setNewArgument] = useState('');
   const [showRefine, setShowRefine] = useState(false);
@@ -42,6 +43,10 @@ export default function DebateBoardView({ boardId }) {
   const [showRetranslate, setShowRetranslate] = useState(false);
   const [retranslateComment, setRetranslateComment] = useState('');
   const [retranslating, setRetranslating] = useState(false);
+
+  // Admin features editing state
+  const [editingFeatures, setEditingFeatures] = useState(false);
+  const [editFeaturesText, setEditFeaturesText] = useState('');
 
   const { loading, error, data, refetch } = useQuery(GET_DEBATE_BOARD, {
     variables: { id: boardId },
@@ -84,6 +89,14 @@ export default function DebateBoardView({ boardId }) {
   const [translateContent] = useMutation(TRANSLATE_CONTENT);
   const [retranslateContent] = useMutation(RETRANSLATE_CONTENT);
 
+  const [updateDebateBoardFeatures] = useMutation(UPDATE_DEBATE_BOARD_FEATURES, {
+    onCompleted: () => {
+      setEditingFeatures(false);
+      setEditFeaturesText('');
+      refetch();
+    },
+  });
+
   useSubscription(DEBATE_BOARD_UPDATED, {
     variables: { debateBoardID: boardId },
     onData: ({ data: subData }) => {
@@ -102,12 +115,31 @@ export default function DebateBoardView({ boardId }) {
     onData: () => refetch(),
   });
 
-  // Reset translation when language changes
+  // Auto-translate when language changes or content loads
   useEffect(() => {
     setShowTranslation(false);
     setTranslatedContent(null);
     setTranslatedTitle(null);
-  }, [language]);
+    if (data?.debateBoard?.content) {
+      const doTranslate = async () => {
+        setTranslating(true);
+        try {
+          const [contentResult, titleResult] = await Promise.all([
+            translateContent({ variables: { contentType: 'board', contentID: boardId, targetLanguage } }),
+            translateContent({ variables: { contentType: 'board_title', contentID: boardId, targetLanguage } }),
+          ]);
+          setTranslatedContent(contentResult.data.translateContent.translatedText);
+          setTranslatedTitle(titleResult.data.translateContent.translatedText);
+          setShowTranslation(true);
+        } catch (err) {
+          console.error('Auto-translation failed:', err);
+        } finally {
+          setTranslating(false);
+        }
+      };
+      doTranslate();
+    }
+  }, [language, data?.debateBoard?.content]);
 
   const handleTranslateBoard = async () => {
     if (showTranslation) {
@@ -210,7 +242,9 @@ export default function DebateBoardView({ boardId }) {
   };
 
   const filteredArguments = useMemo(() => {
-    const args = data?.debateBoard?.arguments || [];
+    const args = [...(data?.debateBoard?.arguments || [])].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
     if (argumentFilter === 'all') return args;
 
     const AI_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -265,6 +299,34 @@ export default function DebateBoardView({ boardId }) {
               <span> | {t('board.updated')} {new Date(board.updatedAt).toLocaleDateString()}</span>
             )}
           </div>
+          {(board.features && board.features.length > 0 || user.isAdmin) && (
+            <div className="board-card-tags">
+              {(board.features || []).map(f => <span key={f} className="tag-chip">{tTag(f)}</span>)}
+              {user.isAdmin && editingFeatures ? (
+                <span className="inline-features-edit">
+                  <input
+                    type="text"
+                    value={editFeaturesText}
+                    onChange={(e) => setEditFeaturesText(e.target.value)}
+                    placeholder="tag1, tag2, ..."
+                    className="features-edit-input"
+                    autoFocus
+                  />
+                  <button
+                    className="btn-admin btn-small"
+                    onClick={() => updateDebateBoardFeatures({ variables: { id: boardId, features: editFeaturesText.split(',').map(f => f.trim()).filter(Boolean) } })}
+                  >&#10003;</button>
+                  <button className="btn-secondary btn-small" onClick={() => setEditingFeatures(false)}>&#10005;</button>
+                </span>
+              ) : user.isAdmin && (
+                <button
+                  className="btn-edit-tags"
+                  onClick={() => { setEditFeaturesText((board.features || []).join(', ')); setEditingFeatures(true); }}
+                  title="Edit features"
+                >&#9998;</button>
+              )}
+            </div>
+          )}
         </div>
         {user.isAdmin && (
           <div className="board-actions">
