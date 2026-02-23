@@ -132,31 +132,36 @@ export default function DebateBoardView({ boardId }) {
     });
   };
 
-  // Auto-translate when language changes or content loads
+  // Auto-translate when the user changes language (not on initial content load)
   useEffect(() => {
     setShowTranslation(false);
     setTranslatedContent(null);
     setTranslatedTitle(null);
-    if (data?.debateBoard?.content) {
-      const doTranslate = async () => {
-        setTranslating(true);
-        try {
-          const [contentResult, titleResult] = await Promise.all([
-            translateContent({ variables: { contentType: 'board', contentID: boardId, targetLanguage } }),
-            translateContent({ variables: { contentType: 'board_title', contentID: boardId, targetLanguage } }),
-          ]);
+    if (!data?.debateBoard?.content) return;
+
+    let cancelled = false;
+    const doTranslate = async () => {
+      setTranslating(true);
+      try {
+        const [contentResult, titleResult] = await Promise.all([
+          translateContent({ variables: { contentType: 'board', contentID: boardId, targetLanguage } }),
+          translateContent({ variables: { contentType: 'board_title', contentID: boardId, targetLanguage } }),
+        ]);
+        if (!cancelled) {
           setTranslatedContent(contentResult.data.translateContent.translatedText);
           setTranslatedTitle(titleResult.data.translateContent.translatedText);
           setShowTranslation(true);
-        } catch (err) {
-          console.error('Auto-translation failed:', err);
-        } finally {
-          setTranslating(false);
         }
-      };
-      doTranslate();
-    }
-  }, [language, data?.debateBoard?.content]);
+      } catch (err) {
+        if (!cancelled) console.error('Auto-translation failed:', err);
+      } finally {
+        if (!cancelled) setTranslating(false);
+      }
+    };
+    doTranslate();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, targetLanguage]);
 
   const handleTranslateBoard = async () => {
     if (showTranslation) {
