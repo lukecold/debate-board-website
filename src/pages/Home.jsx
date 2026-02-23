@@ -79,7 +79,7 @@ export default function Home() {
     },
   });
 
-  const [createProposal, { loading: creatingProposal }] = useMutation(CREATE_PROPOSAL, {
+  const [createProposal, { loading: creatingProposal, error: proposalError }] = useMutation(CREATE_PROPOSAL, {
     onCompleted: () => {
       setShowProposalForm(false);
       setProposalTitle('');
@@ -414,12 +414,14 @@ export default function Home() {
       <section className="home-section">
         <div className="home-section-header">
           <h2>{t('home.proposals')}</h2>
-          <button
-            className="btn-primary"
-            onClick={() => setShowProposalForm(!showProposalForm)}
-          >
-            {showProposalForm ? t('home.cancel') : t('home.proposeNewBoard')}
-          </button>
+          {user && (
+            <button
+              className="btn-primary"
+              onClick={() => setShowProposalForm(!showProposalForm)}
+            >
+              {showProposalForm ? t('home.cancel') : t('home.proposeNewBoard')}
+            </button>
+          )}
         </div>
 
         {showProposalForm && (
@@ -444,6 +446,9 @@ export default function Home() {
               value={proposalFeatures}
               onChange={(e) => setProposalFeatures(e.target.value)}
             />
+            {proposalError && (
+              <p className="auth-error">{proposalError.message}</p>
+            )}
             <button type="submit" className="btn-primary" disabled={creatingProposal}>
               {creatingProposal ? t('home.submitting') : t('home.submitProposal')}
             </button>
