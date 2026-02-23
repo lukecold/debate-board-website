@@ -1,22 +1,52 @@
+substitutions:
+  _AR_HOSTNAME: asia-southeast3-docker.pkg.dev
+  _AR_PROJECT_ID: project-36beba7a-3d48-4492-984
+  _AR_REPOSITORY: cloud-run-source-deploy
+  _DEPLOY_REGION: asia-southeast3
+  _SERVICE_NAME: debate-board-website
+  _DEBATE_BOARD_API_URL: https://debate-board-service-qfq3w5kpra-eu.a.run.app/query
+  _DEBATE_BOARD_WS_URL: wss://debate-board-service-qfq3w5kpra-eu.a.run.app/query
+  _USER_SERVICE_API_URL: https://user-service-qfq3w5kpra-eu.a.run.app/query
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 steps:
   - id: Build
     name: gcr.io/cloud-builders/docker
-    entrypoint: bash
     args:
-      - -c
-      - |
-        docker build \
-          --build-arg VITE_DEBATE_BOARD_API_URL=https://debate-board-service-qfq3w5kpra-eu.a.run.app/query \
-          --build-arg VITE_DEBATE_BOARD_WS_URL=wss://debate-board-service-qfq3w5kpra-eu.a.run.app/query \
-          --build-arg VITE_USER_SERVICE_API_URL=https://user-service-qfq3w5kpra-eu.a.run.app/query \
-          -t $_IMAGE_NAME \
-          .
+      - build
+      - --no-cache
+      - --build-arg=VITE_DEBATE_BOARD_API_URL=${_DEBATE_BOARD_API_URL}
+      - --build-arg=VITE_DEBATE_BOARD_WS_URL=${_DEBATE_BOARD_WS_URL}
+      - --build-arg=VITE_USER_SERVICE_API_URL=${_USER_SERVICE_API_URL}
+      - -t
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}/${_SERVICE_NAME}:$COMMIT_SHA
+      - -f
+      - Dockerfile
+      - .
+
+  - id: Push
+    name: gcr.io/cloud-builders/docker
+    waitFor: [Build]
+    args:
+      - push
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}/${_SERVICE_NAME}:$COMMIT_SHA
+
+  - id: Deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [Push]
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - ${_SERVICE_NAME}
+      - --platform=managed
+      - --image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}/${_SERVICE_NAME}:$COMMIT_SHA
+      - --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
+      - --region=${_DEPLOY_REGION}
+      - --quiet
 
 images:
-  - $_IMAGE_NAME
-
-# _IMAGE_NAME must be passed via --substitutions when running manually.
-# Example:
-#   gcloud builds submit \
-#     --substitutions=_IMAGE_NAME=asia-southeast3-docker.pkg.dev/PROJECT/cloud-run-source-deploy/debate-board-website/debate-board-website:TAG \
-#     .
+  - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}/${_SERVICE_NAME}:$COMMIT_SHA
