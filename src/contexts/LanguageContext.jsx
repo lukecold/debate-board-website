@@ -23,9 +23,7 @@ export function LanguageProvider({ children }) {
     return translations[language]?.[key] || translations['en']?.[key] || tag;
   }, [language]);
 
-  // targetLanguage is the language to translate content into.
-  // When UI is English, translate to Chinese (default cross-language); otherwise translate to the UI language.
-  const targetLanguage = language === 'en' ? 'zh' : language;
+  const targetLanguage = language;
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, tTag, targetLanguage }}>

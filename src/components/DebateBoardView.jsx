@@ -39,6 +39,9 @@ export default function DebateBoardView({ boardId }) {
   const [translatedTitle, setTranslatedTitle] = useState(null);
   const [translating, setTranslating] = useState(false);
 
+  // Local optimistic favourite state (null = use server state)
+  const [localFavState, setLocalFavState] = useState(null);
+
   // Admin re-translate state
   const [showRetranslate, setShowRetranslate] = useState(false);
   const [retranslateComment, setRetranslateComment] = useState('');
@@ -82,9 +85,7 @@ export default function DebateBoardView({ boardId }) {
     onCompleted: () => refetch(),
   });
 
-  const [toggleFavourite] = useMutation(TOGGLE_FAVOURITE, {
-    onCompleted: () => refetch(),
-  });
+  const [toggleFavourite] = useMutation(TOGGLE_FAVOURITE);
 
   const [translateContent] = useMutation(TRANSLATE_CONTENT);
   const [retranslateContent] = useMutation(RETRANSLATE_CONTENT);
@@ -114,6 +115,22 @@ export default function DebateBoardView({ boardId }) {
     variables: { debateBoardID: boardId },
     onData: () => refetch(),
   });
+
+  const effectiveFavState = localFavState ?? (data?.debateBoard?.isFavourited ?? false);
+
+  const handleToggleFav = () => {
+    setLocalFavState(!effectiveFavState);
+    toggleFavourite({
+      variables: { debateBoardID: boardId },
+      onCompleted: () => {
+        setLocalFavState(null);
+        refetch();
+      },
+      onError: () => {
+        setLocalFavState(null);
+      },
+    });
+  };
 
   // Auto-translate when language changes or content loads
   useEffect(() => {
@@ -286,11 +303,11 @@ export default function DebateBoardView({ boardId }) {
           <div className="board-title-row">
             <h1>{showTranslation && translatedTitle ? translatedTitle : board.title}</h1>
             <button
-              className={`board-fav-toggle ${board.isFavourited ? 'starred' : ''}`}
-              onClick={() => toggleFavourite({ variables: { debateBoardID: boardId } })}
-              title={board.isFavourited ? t('board.removeFromFavourites') : t('board.addToFavourites')}
+              className={`board-fav-toggle ${effectiveFavState ? 'starred' : ''}`}
+              onClick={handleToggleFav}
+              title={effectiveFavState ? t('board.removeFromFavourites') : t('board.addToFavourites')}
             >
-              {board.isFavourited ? '\u2605' : '\u2606'}
+              {effectiveFavState ? '\u2605' : '\u2606'}
             </button>
           </div>
           <div className="board-dates">

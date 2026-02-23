@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -37,6 +37,7 @@ export default function Home() {
   const [proposalArgText, setProposalArgText] = useState('');
   const [editingFeaturesProposalId, setEditingFeaturesProposalId] = useState(null);
   const [editFeaturesText, setEditFeaturesText] = useState('');
+  const [pendingFavChanges, setPendingFavChanges] = useState({});
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -72,12 +73,7 @@ export default function Home() {
     },
   });
 
-  const [toggleFavourite] = useMutation(TOGGLE_FAVOURITE, {
-    onCompleted: () => {
-      refetchFavs();
-      refetchBoards();
-    },
-  });
+  const [toggleFavourite] = useMutation(TOGGLE_FAVOURITE);
 
   const [createProposal, { loading: creatingProposal, error: proposalError }] = useMutation(CREATE_PROPOSAL, {
     onCompleted: () => {
@@ -142,7 +138,27 @@ export default function Home() {
 
   const handleToggleFavourite = (e, debateBoardID) => {
     e.stopPropagation();
-    toggleFavourite({ variables: { debateBoardID } });
+    const currentlyFav = isEffectivelyFavourited(debateBoardID);
+    setPendingFavChanges(prev => ({ ...prev, [debateBoardID]: !currentlyFav }));
+    toggleFavourite({
+      variables: { debateBoardID },
+      onCompleted: () => {
+        setPendingFavChanges(prev => {
+          const next = { ...prev };
+          delete next[debateBoardID];
+          return next;
+        });
+        refetchFavs();
+        refetchBoards();
+      },
+      onError: () => {
+        setPendingFavChanges(prev => {
+          const next = { ...prev };
+          delete next[debateBoardID];
+          return next;
+        });
+      },
+    });
   };
 
   const handleToggleTag = (tag) => {
@@ -244,6 +260,26 @@ export default function Home() {
   const allTags = tagsData?.allTags || [];
   const proposals = proposalsData?.proposals || [];
 
+  const isEffectivelyFavourited = (boardId) => {
+    if (boardId in pendingFavChanges) return pendingFavChanges[boardId];
+    if (favourites.some(f => f.debateBoardID === boardId)) return true;
+    const board = boards.find(b => b.debateBoardID === boardId);
+    return board?.isFavourited ?? false;
+  };
+
+  const effectiveFavourites = useMemo(() => {
+    let result = favourites.filter(f =>
+      !(f.debateBoardID in pendingFavChanges && !pendingFavChanges[f.debateBoardID])
+    );
+    for (const [boardId, isFav] of Object.entries(pendingFavChanges)) {
+      if (isFav && !favourites.some(f => f.debateBoardID === boardId)) {
+        const board = boards.find(b => b.debateBoardID === boardId);
+        if (board) result = [board, ...result];
+      }
+    }
+    return result;
+  }, [favourites, pendingFavChanges, boards]);
+
   const AI_USER_ID = '00000000-0000-0000-0000-000000000001';
 
   const getUserArguments = (proposal) => {
@@ -263,13 +299,13 @@ export default function Home() {
         <div className="home-section-header">
           <h2>{t('home.myFavourites')}</h2>
         </div>
-        {favourites.length === 0 ? (
+        {effectiveFavourites.length === 0 ? (
           <div className="favourites-empty">
             {t('home.starToAdd')}
           </div>
         ) : (
           <div className="favourites-row">
-            {favourites.map((board) => (
+            {effectiveFavourites.map((board) => (
               <div
                 key={board.debateBoardID}
                 className="board-card fav-card"
@@ -375,11 +411,11 @@ export default function Home() {
               onClick={() => navigate(`/board/${board.debateBoardID}`)}
             >
               <button
-                className={`board-card-star ${board.isFavourited ? 'starred' : ''}`}
+                className={`board-card-star ${isEffectivelyFavourited(board.debateBoardID) ? 'starred' : ''}`}
                 onClick={(e) => handleToggleFavourite(e, board.debateBoardID)}
-                title={board.isFavourited ? t('home.removeFromFavourites') : t('home.addToFavourites')}
+                title={isEffectivelyFavourited(board.debateBoardID) ? t('home.removeFromFavourites') : t('home.addToFavourites')}
               >
-                {board.isFavourited ? '\u2605' : '\u2606'}
+                {isEffectivelyFavourited(board.debateBoardID) ? '\u2605' : '\u2606'}
               </button>
               <h3>{board.title}</h3>
               <p className="board-preview">
