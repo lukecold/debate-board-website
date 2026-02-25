@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { languageOptions } from '../lib/languageOptions';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -12,15 +13,6 @@ export default function Header() {
     logout();
     navigate('/login');
   };
-
-  const languageOptions = [
-    { code: 'en', label: 'English' },
-    { code: 'zh', label: '中文' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'ja', label: '日本語' },
-    { code: 'th', label: 'ภาษาไทย' },
-  ];
 
   return (
     <header className="app-header">

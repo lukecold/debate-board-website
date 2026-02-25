@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userServiceClient } from '../lib/apollo';
 import { REGISTER, LOGIN } from '../lib/userQueries';
+import { languageOptions } from '../lib/languageOptions';
 
 export default function LoginPage() {
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'sent'
@@ -54,17 +55,19 @@ export default function LoginPage() {
     setDevLink('');
   };
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'zh' : 'en');
-  };
-
   return (
     <div className="login-page">
       <div className="login-card">
         <div className="login-lang-toggle">
-          <button className="btn-lang-toggle" onClick={toggleLanguage}>
-            {language === 'en' ? '中文' : 'English'}
-          </button>
+          <select
+            className="btn-lang-toggle"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
+            {languageOptions.map(({ code, label }) => (
+              <option key={code} value={code}>{label}</option>
+            ))}
+          </select>
         </div>
         <h1>{t('login.title')}</h1>
         <p className="login-subtitle">
