@@ -339,6 +339,13 @@ body {
   gap: 16px;
 }
 
+/* Battle & Octagon modes: fixed 2-column half-half layout */
+.home-mode-battle .boards-grid,
+.home-mode-octagon .boards-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
 .board-card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -347,6 +354,16 @@ body {
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.1s;
   position: relative;
+}
+
+/* Battle mode card: orange left accent */
+.home-mode-battle .board-card {
+  border-left: 4px solid #e65c00;
+}
+
+/* Octagon mode card: red left accent */
+.home-mode-octagon .board-card {
+  border-left: 4px solid #cc0000;
 }
 
 .board-card:hover {
@@ -2178,3 +2195,207 @@ body {
   color: #2563eb;
   text-decoration: underline;
 }
+
+/* ==================== Board Mode Badges ==================== */
+.mode-badge-battle {
+  background: #e65c00;
+  color: white;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.mode-badge-octagon {
+  background: #cc0000;
+  color: white;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ==================== Battle/OCTAGON Split Layout ==================== */
+/* Override the default 1fr 380px grid to a true 50/50 split */
+.battle-layout {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px), (orientation: portrait) {
+  .battle-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== OCTAGON UI ==================== */
+.octagon-pending-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.octagon-participant-lists {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 8px 0;
+}
+
+.octagon-respond-btns {
+  margin-top: 8px;
+}
+
+.octagon-create-section {
+  margin: 12px 0;
+}
+
+.spectator-note {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  padding: 16px;
+}
+
+.btn-octagon {
+  background: #cc0000;
+  color: white;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-octagon:hover {
+  background: #a50000;
+}
+
+/* ==================== Mode Page Theming ==================== */
+.home-mode-info .home-section-header h2 { color: #1d4ed8; }
+.home-mode-info .home-section { border-top: 2px solid #dbeafe; padding-top: 24px; }
+
+.home-mode-battle .home-section-header h2 { color: #e65c00; }
+.home-mode-battle .home-section { border-top: 2px solid #fed7aa; padding-top: 24px; }
+
+.home-mode-octagon .home-section-header h2 { color: #cc0000; }
+.home-mode-octagon .home-section { border-top: 2px solid #fecaca; padding-top: 24px; }
+
+/* ==================== Mode Switcher (tab strip) ==================== */
+.mode-switcher {
+  display: flex;
+  border-bottom: 3px solid #e5e7eb;
+  margin: 0 0 28px 0;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 14px 12px 11px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  color: #9ca3af;
+  transition: color 0.15s;
+  position: relative;
+}
+
+.mode-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.mode-tab-name {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.mode-tab-desc {
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 3px;
+  opacity: 0.85;
+}
+
+/* Info — blue */
+.mode-tab-info:hover  { color: #1d4ed8; }
+.mode-tab-info.active { color: #1d4ed8; }
+.mode-tab-info.active::after { background: #1d4ed8; }
+
+/* Battle — orange */
+.mode-tab-battle:hover  { color: #e65c00; }
+.mode-tab-battle.active { color: #e65c00; }
+.mode-tab-battle.active::after { background: #e65c00; }
+
+/* OCTAGON! — red */
+.mode-tab-octagon:hover  { color: #cc0000; }
+.mode-tab-octagon.active { color: #cc0000; }
+.mode-tab-octagon.active::after { background: #cc0000; }
+
+@media (max-width: 480px) {
+  .mode-tab-desc { display: none; }
+}
+
+/* OCTAGON! status sub-tabs */
+.octagon-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 0 20px 0;
+  border-bottom: 2px solid #fecaca;
+}
+
+.octagon-tab {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #9ca3af;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.octagon-tab:hover        { color: #cc0000; }
+.octagon-tab.active       { color: #cc0000; border-bottom-color: #cc0000; }
+
+.octagon-close-vote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.btn-close-vote {
+  background: #fef2f2;
+  color: #cc0000;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-close-vote:hover { background: #fee2e2; }
+.btn-close-vote:disabled { opacity: 0.5; cursor: not-allowed; }

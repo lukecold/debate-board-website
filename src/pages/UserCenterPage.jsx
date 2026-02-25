@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { client, userServiceClient } from '../lib/apollo';
-import { GET_USER_ACTIVITY } from '../lib/queries';
+import { GET_USER_ACTIVITY, GET_MY_OCTAGON_INVITES, RESPOND_TO_OCTAGON_INVITE } from '../lib/queries';
 import {
   GET_PUBLIC_USER,
   GET_ALIAS_COOLDOWN,
@@ -43,7 +43,7 @@ export default function UserCenterPage() {
 
   const isOwnProfile = me && me.id === userID;
 
-  // Active tab: 'arguments' | 'proposals' | 'boards' | 'votes' | 'settings'
+  // Active tab: 'arguments' | 'proposals' | 'boards' | 'votes' | 'invites' | 'settings'
   const [tab, setTab] = useState('arguments');
 
   // ── Settings state ──────────────────────────────────────────────────────────
@@ -72,6 +72,17 @@ export default function UserCenterPage() {
   const { data: cooldownData, refetch: refetchCooldown } = useQuery(GET_ALIAS_COOLDOWN, {
     client: userServiceClient,
     skip: !isOwnProfile,
+  });
+
+  const { data: invitesData, refetch: refetchInvites } = useQuery(GET_MY_OCTAGON_INVITES, {
+    client,
+    skip: !isOwnProfile,
+    fetchPolicy: 'network-only',
+  });
+
+  const [respondToOctagonInvite] = useMutation(RESPOND_TO_OCTAGON_INVITE, {
+    client,
+    onCompleted: () => refetchInvites(),
   });
 
   // ── Mutations ───────────────────────────────────────────────────────────────
@@ -144,6 +155,8 @@ export default function UserCenterPage() {
     { key: 'votes', label: t('uc.tabVotes') },
     // Boards tab: show for everyone (boards from adopted proposals are public)
     { key: 'boards', label: t('uc.tabBoards') },
+    // Invites tab: own profile only
+    ...(isOwnProfile ? [{ key: 'invites', label: t('uc.octagonInvites') }] : []),
     // Settings tab: own profile only
     ...(isOwnProfile ? [{ key: 'settings', label: t('uc.tabSettings') }] : []),
   ];
@@ -159,6 +172,9 @@ export default function UserCenterPage() {
             {profile.isAdmin && <span className="admin-badge">{t('header.admin')}</span>}
           </h2>
           <p className="uc-score">{t('uc.contributionScore')}: <strong>{profile.contributionScore}</strong></p>
+          {(profile.battlePoints > 0 || isOwnProfile) && (
+            <p className="uc-score">{t('uc.battlePoints')}: <strong>{profile.battlePoints ?? 0}</strong></p>
+          )}
           <p className="uc-joined">{t('uc.joined')}: {new Date(profile.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
@@ -282,6 +298,40 @@ export default function UserCenterPage() {
                 ))
               }
             </div>
+          </div>
+        )}
+
+        {/* OCTAGON! Invites (own profile only) */}
+        {tab === 'invites' && isOwnProfile && (
+          <div className="uc-list">
+            {(invitesData?.myOctagonInvites ?? []).length === 0
+              ? <p className="uc-empty">{t('uc.noInvites')}</p>
+              : (invitesData.myOctagonInvites).map((inv) => (
+                <div key={inv.octagonID} className="uc-item">
+                  <div className="uc-item-row">
+                    <strong className="uc-item-title">
+                      <span className="mode-badge-octagon">OCTAGON!</span>{' '}
+                      <Link to={`/board/${inv.boardID}`}>{inv.boardTitle}</Link>
+                    </strong>
+                  </div>
+                  <div className="uc-item-meta">
+                    <button
+                      className="btn-octagon"
+                      onClick={() => respondToOctagonInvite({ variables: { boardID: inv.boardID, accept: true } })}
+                    >
+                      {t('uc.accept')}
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      style={{ marginLeft: '8px' }}
+                      onClick={() => respondToOctagonInvite({ variables: { boardID: inv.boardID, accept: false } })}
+                    >
+                      {t('uc.decline')}
+                    </button>
+                  </div>
+                </div>
+              ))
+            }
           </div>
         )}
 

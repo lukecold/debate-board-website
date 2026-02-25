@@ -7,6 +7,8 @@ import {
   GET_ALL_TAGS,
   GET_PROPOSALS,
   CREATE_DEBATE_BOARD,
+  CREATE_OCTAGON_BOARD,
+  VOTE_TO_CLOSE_OCTAGON,
   CREATE_PROPOSAL,
   TOGGLE_FAVOURITE,
   VOTE_ON_PROPOSAL,
@@ -16,6 +18,8 @@ import {
   ADMIN_REJECT_PROPOSAL,
   TRANSLATE_CONTENT,
   UPDATE_PROPOSAL_FEATURES,
+  UPDATE_BOARD_MODE,
+  UPDATE_PROPOSAL_MODE,
 } from '../lib/queries';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -28,6 +32,14 @@ export default function Home() {
   const [newTitle, setNewTitle] = useState('');
   const [newInstruction, setNewInstruction] = useState('');
   const [newFeatures, setNewFeatures] = useState('');
+  const [viewMode, setViewMode] = useState('info');
+  const [octagonTab, setOctagonTab] = useState('active'); // initiating | active | archived
+  // OCTAGON creation form state
+  const [showOctagonCreate, setShowOctagonCreate] = useState(false);
+  const [octagonTitle, setOctagonTitle] = useState('');
+  const [octagonInstruction, setOctagonInstruction] = useState('');
+  const [octagonFeatures, setOctagonFeatures] = useState('');
+  const [octagonAliases, setOctagonAliases] = useState('');
   const [proposalTab, setProposalTab] = useState('active');
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [proposalTitle, setProposalTitle] = useState('');
@@ -57,7 +69,10 @@ export default function Home() {
   const { data: tagsData } = useQuery(GET_ALL_TAGS);
 
   const { data: proposalsData, loading: proposalsLoading, refetch: refetchProposals } = useQuery(GET_PROPOSALS, {
-    variables: { status: proposalTab === 'active' ? 'open' : proposalTab },
+    variables: {
+      status: proposalTab === 'active' ? 'open' : proposalTab,
+      mode: viewMode !== 'octagon' ? viewMode : undefined,
+    },
   });
 
   // ========== Mutations ==========
@@ -71,6 +86,23 @@ export default function Home() {
       refetchBoards();
       navigate(`/board/${boardId}`);
     },
+  });
+
+  const [createOctagonBoard, { loading: creatingOctagon }] = useMutation(CREATE_OCTAGON_BOARD, {
+    onCompleted: (data) => {
+      const boardId = data.createOctagonBoard;
+      setShowOctagonCreate(false);
+      setOctagonTitle('');
+      setOctagonInstruction('');
+      setOctagonFeatures('');
+      setOctagonAliases('');
+      refetchBoards();
+      navigate(`/board/${boardId}`);
+    },
+  });
+
+  const [voteToCloseOctagon] = useMutation(VOTE_TO_CLOSE_OCTAGON, {
+    onCompleted: () => refetchBoards(),
   });
 
   const [toggleFavourite] = useMutation(TOGGLE_FAVOURITE);
@@ -118,6 +150,14 @@ export default function Home() {
 
   const [translateContentMutation] = useMutation(TRANSLATE_CONTENT);
 
+  const [updateBoardMode] = useMutation(UPDATE_BOARD_MODE, {
+    onCompleted: () => refetchBoards(),
+  });
+
+  const [updateProposalMode] = useMutation(UPDATE_PROPOSAL_MODE, {
+    onCompleted: () => refetchProposals(),
+  });
+
   // Reset translations when language changes
   useEffect(() => {
     setProposalTranslations({});
@@ -132,6 +172,20 @@ export default function Home() {
         title: newTitle,
         features: newFeatures.split(',').map(f => f.trim()).filter(Boolean),
         instruction: newInstruction,
+        mode: viewMode,
+      },
+    });
+  };
+
+  const handleCreateOctagon = (e) => {
+    e.preventDefault();
+    if (!octagonTitle.trim() || !octagonInstruction.trim()) return;
+    createOctagonBoard({
+      variables: {
+        title: octagonTitle,
+        features: octagonFeatures.split(',').map(f => f.trim()).filter(Boolean),
+        instruction: octagonInstruction,
+        invitedAliases: octagonAliases.split(',').map(a => a.trim()).filter(Boolean),
       },
     });
   };
@@ -176,6 +230,7 @@ export default function Home() {
         title: proposalTitle,
         description: proposalDescription,
         features: featuresArray.length > 0 ? featuresArray : undefined,
+        mode: viewMode !== 'octagon' ? viewMode : 'info',
       },
     });
   };
@@ -257,7 +312,18 @@ export default function Home() {
   // ========== Data ==========
   const favourites = favsData?.myFavourites || [];
   const boards = boardsData?.debateBoards || [];
-  const allTags = tagsData?.allTags || [];
+  const modeBoards = boards.filter(b => b.mode === viewMode);
+  // For OCTAGON! mode, further filter by octagon sub-tab status
+  const octagonStatusMap = { initiating: 'pending', active: 'active', archived: 'archived' };
+  const filteredBoards = viewMode === 'octagon'
+    ? modeBoards.filter(b => b.octagonInfo?.status === octagonStatusMap[octagonTab])
+    : modeBoards;
+  // Tags relevant to the current mode only (derived from boards in this mode)
+  const modeTags = useMemo(() => {
+    const tagSet = new Set();
+    modeBoards.forEach(b => (b.features || []).forEach(f => tagSet.add(f)));
+    return Array.from(tagSet).sort();
+  }, [modeBoards]);
   const proposals = proposalsData?.proposals || [];
 
   const isEffectivelyFavourited = (boardId) => {
@@ -292,20 +358,48 @@ export default function Home() {
     return true;
   };
 
+  const filteredFavourites = effectiveFavourites.filter(f => f.mode === viewMode);
+  const userId = user?.id;
+
+  const boardsSectionTitle = viewMode === 'battle'
+    ? t('home.battleBoards')
+    : viewMode === 'octagon'
+      ? t('home.thePits')
+      : t('home.debateBoards');
+
   return (
-    <div className="home">
+    <div className={`home home-mode-${viewMode}`}>
+
+      {/* ==================== MODE SWITCHER ==================== */}
+      <div className="mode-switcher">
+        {[
+          { key: 'info',    labelKey: 'home.modeInfo',    descKey: 'home.modeInfoDesc' },
+          { key: 'battle',  labelKey: 'home.modeBattle',  descKey: 'home.modeBattleDesc' },
+          { key: 'octagon', labelKey: 'board.modeOctagon', descKey: 'home.modeOctagonDesc' },
+        ].map(({ key, labelKey, descKey }) => (
+          <button
+            key={key}
+            className={`mode-tab mode-tab-${key}${viewMode === key ? ' active' : ''}`}
+            onClick={() => { setViewMode(key); setShowCreate(false); setShowOctagonCreate(false); setSelectedTags([]); }}
+          >
+            <span className="mode-tab-name">{t(labelKey)}</span>
+            <span className="mode-tab-desc">{t(descKey)}</span>
+          </button>
+        ))}
+      </div>
+
       {/* ==================== SECTION 1: My Favourites ==================== */}
       <section className="home-section">
         <div className="home-section-header">
           <h2>{t('home.myFavourites')}</h2>
         </div>
-        {effectiveFavourites.length === 0 ? (
+        {filteredFavourites.length === 0 ? (
           <div className="favourites-empty">
             {t('home.starToAdd')}
           </div>
         ) : (
           <div className="favourites-row">
-            {effectiveFavourites.map((board) => (
+            {filteredFavourites.map((board) => (
               <div
                 key={board.debateBoardID}
                 className="board-card fav-card"
@@ -318,6 +412,8 @@ export default function Home() {
                 >
                   &#9733;
                 </button>
+                {board.mode === 'octagon' && <span className="mode-badge-octagon">{t('board.modeOctagon')}</span>}
+                {board.mode === 'battle' && <span className="mode-badge-battle">{t('board.modeBattle')}</span>}
                 <h3>{board.title}</h3>
                 <p className="board-preview">
                   {board.content ? board.content.substring(0, 100) + '...' : t('home.contentGenerating')}
@@ -336,7 +432,7 @@ export default function Home() {
       {/* ==================== SECTION 2: Debate Boards ==================== */}
       <section className="home-section">
         <div className="home-section-header">
-          <h2>{t('home.debateBoards')}</h2>
+          <h2>{boardsSectionTitle}</h2>
           <div className="home-section-controls">
             <input
               type="text"
@@ -345,7 +441,7 @@ export default function Home() {
               onChange={(e) => setSearch(e.target.value)}
               className="search-input"
             />
-            {isAdmin && (
+            {isAdmin && viewMode !== 'octagon' && (
               <button className="btn-primary" onClick={() => setShowCreate(!showCreate)}>
                 {showCreate ? t('home.cancel') : t('home.newBoard')}
               </button>
@@ -353,9 +449,9 @@ export default function Home() {
           </div>
         </div>
 
-        {allTags.length > 0 && (
+        {modeTags.length > 0 && (
           <div className="tag-filter-bar">
-            {allTags.map(tag => (
+            {modeTags.map(tag => (
               <button
                 key={tag}
                 className={`tag-pill ${selectedTags.includes(tag) ? 'active' : ''}`}
@@ -400,11 +496,75 @@ export default function Home() {
           </form>
         )}
 
+        {/* OCTAGON! board creation — shown in octagon mode for eligible users */}
+        {viewMode === 'octagon' && user && (user.contributionScore > 10 || (user.battlePoints || 0) > 10) && (
+          <div className="octagon-create-section">
+            <button
+              className="btn-octagon"
+              onClick={() => setShowOctagonCreate(!showOctagonCreate)}
+            >
+              {showOctagonCreate ? t('home.cancel') : t('home.createOctagonBtn')}
+            </button>
+            {showOctagonCreate && (
+              <form className="create-form" onSubmit={handleCreateOctagon}>
+                <input
+                  type="text"
+                  placeholder={t('home.boardTitlePlaceholder')}
+                  value={octagonTitle}
+                  onChange={(e) => setOctagonTitle(e.target.value)}
+                  required
+                />
+                <textarea
+                  placeholder={t('home.boardInstructionPlaceholder')}
+                  value={octagonInstruction}
+                  onChange={(e) => setOctagonInstruction(e.target.value)}
+                  rows={3}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder={t('home.boardFeaturesPlaceholder')}
+                  value={octagonFeatures}
+                  onChange={(e) => setOctagonFeatures(e.target.value)}
+                />
+                <textarea
+                  placeholder={t('home.octagonAliases')}
+                  value={octagonAliases}
+                  onChange={(e) => setOctagonAliases(e.target.value)}
+                  rows={2}
+                />
+                <button type="submit" className="btn-octagon" disabled={creatingOctagon}>
+                  {creatingOctagon ? t('home.creating') : t('home.createOctagonBtn')}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* OCTAGON! sub-tabs: Initiating / Active / Archived */}
+        {viewMode === 'octagon' && (
+          <div className="octagon-tabs">
+            {[
+              { key: 'initiating', label: t('home.octagonInitiating') },
+              { key: 'active',     label: t('home.octagonActive') },
+              { key: 'archived',   label: t('home.octagonArchived') },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                className={`octagon-tab${octagonTab === key ? ' active' : ''}`}
+                onClick={() => setOctagonTab(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {boardsLoading && <div className="loading">{t('home.loadingBoards')}</div>}
         {boardsError && <div className="error">Error: {boardsError.message}</div>}
 
         <div className="boards-grid">
-          {boards.map((board) => (
+          {filteredBoards.map((board) => (
             <div
               key={board.debateBoardID}
               className="board-card"
@@ -417,6 +577,8 @@ export default function Home() {
               >
                 {isEffectivelyFavourited(board.debateBoardID) ? '\u2605' : '\u2606'}
               </button>
+              {board.mode === 'octagon' && <span className="mode-badge-octagon">{t('board.modeOctagon')}</span>}
+              {board.mode === 'battle' && <span className="mode-badge-battle">{t('board.modeBattle')}</span>}
               <h3>{board.title}</h3>
               <p className="board-preview">
                 {board.content ? board.content.substring(0, 150) + '...' : t('home.contentGenerating')}
@@ -424,6 +586,22 @@ export default function Home() {
               {board.features && board.features.length > 0 && (
                 <div className="board-card-tags">
                   {board.features.map(f => <span key={f} className="tag-chip">{tTag(f)}</span>)}
+                </div>
+              )}
+              {/* Vote-to-close for active OCTAGON! boards where user is an accepted fighter */}
+              {board.mode === 'octagon' && board.octagonInfo?.status === 'active' &&
+               board.octagonInfo?.acceptedUserIDs?.includes(userId) && (
+                <div className="octagon-close-vote" onClick={e => e.stopPropagation()}>
+                  <button
+                    className="btn-close-vote"
+                    disabled={board.octagonInfo.closeVoteUserIDs?.includes(userId)}
+                    onClick={() => voteToCloseOctagon({ variables: { boardID: board.debateBoardID } })}
+                  >
+                    {board.octagonInfo.closeVoteUserIDs?.includes(userId)
+                      ? t('home.closedVoted')
+                      : t('home.voteToClose')}
+                  </button>
+                  <span>{board.octagonInfo.closeVoteUserIDs?.length || 0}/{board.octagonInfo.acceptedUserIDs?.length} {t('home.closeVotes')}</span>
                 </div>
               )}
               <div className="board-meta">
@@ -435,10 +613,26 @@ export default function Home() {
                     {t('board.updated')} {new Date(board.updatedAt).toLocaleDateString()}
                   </span>
                 )}
+                {isAdmin && board.mode !== 'octagon' && (
+                  <button
+                    className="btn-admin btn-small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBoardMode({
+                        variables: {
+                          boardID: board.debateBoardID,
+                          mode: board.mode === 'info' ? 'battle' : 'info',
+                        },
+                      });
+                    }}
+                  >
+                    {board.mode === 'info' ? t('home.moveToBattle') : t('home.moveToInfo')}
+                  </button>
+                )}
               </div>
             </div>
           ))}
-          {boards.length === 0 && !boardsLoading && (
+          {filteredBoards.length === 0 && !boardsLoading && (
             <div className="empty-state">
               <p>{t('home.noBoards')}</p>
             </div>
@@ -446,8 +640,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ==================== SECTION 3: Proposals ==================== */}
-      <section className="home-section">
+      {/* ==================== SECTION 3: Proposals (info + battle modes) ==================== */}
+      {viewMode !== 'octagon' && <section className="home-section">
         <div className="home-section-header">
           <h2>{t('home.proposals')}</h2>
           {user && (
@@ -587,6 +781,17 @@ export default function Home() {
                       >
                         {t('home.delete')}
                       </button>
+                      <button
+                        className="btn-admin btn-small"
+                        onClick={() => updateProposalMode({
+                          variables: {
+                            proposalID: proposal.id,
+                            mode: proposal.mode === 'info' ? 'battle' : 'info',
+                          },
+                        })}
+                      >
+                        {proposal.mode === 'info' ? t('home.moveToBattle') : t('home.moveToInfo')}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -720,7 +925,7 @@ export default function Home() {
             </div>
           )}
         </div>
-      </section>
+      </section>}
     </div>
   );
 }

@@ -8,6 +8,14 @@ export const GET_DEBATE_BOARD = gql`
       content
       features
       isFavourited
+      mode
+      octagonInfo {
+        octagonID
+        status
+        pendingUserIDs
+        acceptedUserIDs
+        rejectedUserIDs
+      }
       arguments {
         id
         userID
@@ -32,6 +40,15 @@ export const GET_DEBATE_BOARDS = gql`
       content
       features
       isFavourited
+      mode
+      octagonInfo {
+        octagonID
+        status
+        pendingUserIDs
+        acceptedUserIDs
+        rejectedUserIDs
+        closeVoteUserIDs
+      }
       createdAt
       updatedAt
     }
@@ -46,6 +63,7 @@ export const GET_MY_FAVOURITES = gql`
       content
       features
       isFavourited
+      mode
       createdAt
       updatedAt
     }
@@ -65,8 +83,36 @@ export const TOGGLE_FAVOURITE = gql`
 `;
 
 export const CREATE_DEBATE_BOARD = gql`
-  mutation CreateDebateBoard($title: String!, $features: [String!]!, $instruction: String!) {
-    createDebateBoard(title: $title, features: $features, instruction: $instruction)
+  mutation CreateDebateBoard($title: String!, $features: [String!]!, $instruction: String!, $mode: BoardMode) {
+    createDebateBoard(title: $title, features: $features, instruction: $instruction, mode: $mode)
+  }
+`;
+
+export const CREATE_OCTAGON_BOARD = gql`
+  mutation CreateOctagonBoard($title: String!, $features: [String!]!, $instruction: String!, $invitedAliases: [String!]!) {
+    createOctagonBoard(title: $title, features: $features, instruction: $instruction, invitedAliases: $invitedAliases)
+  }
+`;
+
+export const RESPOND_TO_OCTAGON_INVITE = gql`
+  mutation RespondToOctagonInvite($boardID: ID!, $accept: Boolean!) {
+    respondToOctagonInvite(boardID: $boardID, accept: $accept)
+  }
+`;
+
+export const VOTE_TO_CLOSE_OCTAGON = gql`
+  mutation VoteToCloseOctagon($boardID: ID!) {
+    voteToCloseOctagon(boardID: $boardID)
+  }
+`;
+
+export const GET_MY_OCTAGON_INVITES = gql`
+  query GetMyOctagonInvites {
+    myOctagonInvites {
+      boardID
+      boardTitle
+      octagonID
+    }
   }
 `;
 
@@ -110,6 +156,7 @@ export const DEBATE_BOARD_UPDATED = gql`
       content
       features
       isFavourited
+      mode
       arguments {
         id
         userID
@@ -156,14 +203,15 @@ export const DELETE_ARGUMENT = gql`
 // ========== Proposals ==========
 
 export const GET_PROPOSALS = gql`
-  query GetProposals($status: String) {
-    proposals(status: $status) {
+  query GetProposals($status: String, $mode: BoardMode) {
+    proposals(status: $status, mode: $mode) {
       id
       userID
       userAlias
       title
       description
       features
+      mode
       status
       aiFeedback
       aiRecommendation
@@ -218,11 +266,12 @@ export const GET_PROPOSAL = gql`
 `;
 
 export const CREATE_PROPOSAL = gql`
-  mutation CreateProposal($title: String!, $description: String!, $features: [String!]) {
-    createProposal(title: $title, description: $description, features: $features) {
+  mutation CreateProposal($title: String!, $description: String!, $features: [String!], $mode: BoardMode) {
+    createProposal(title: $title, description: $description, features: $features, mode: $mode) {
       id
       title
       features
+      mode
       status
     }
   }
@@ -271,6 +320,18 @@ export const UPDATE_PROPOSAL_FEATURES = gql`
 export const UPDATE_DEBATE_BOARD_FEATURES = gql`
   mutation UpdateDebateBoardFeatures($id: ID!, $features: [String!]!) {
     updateDebateBoardFeatures(id: $id, features: $features)
+  }
+`;
+
+export const UPDATE_BOARD_MODE = gql`
+  mutation UpdateBoardMode($boardID: ID!, $mode: BoardMode!) {
+    updateBoardMode(boardID: $boardID, mode: $mode)
+  }
+`;
+
+export const UPDATE_PROPOSAL_MODE = gql`
+  mutation UpdateProposalMode($proposalID: ID!, $mode: BoardMode!) {
+    updateProposalMode(proposalID: $proposalID, mode: $mode)
   }
 `;
 
@@ -330,6 +391,7 @@ export const GET_USER_ACTIVITY = gql`
         content
         features
         isFavourited
+        mode
         createdAt
         updatedAt
       }

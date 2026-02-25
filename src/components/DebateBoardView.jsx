@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useSubscription } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -16,6 +16,7 @@ import {
   TRANSLATE_CONTENT,
   RETRANSLATE_CONTENT,
   UPDATE_DEBATE_BOARD_FEATURES,
+  RESPOND_TO_OCTAGON_INVITE,
 } from '../lib/queries';
 import ArgumentList from './ArgumentList';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,6 +42,9 @@ export default function DebateBoardView({ boardId }) {
 
   // Local optimistic favourite state (null = use server state)
   const [localFavState, setLocalFavState] = useState(null);
+
+  // Only auto-translate on an actual language *change*, not on initial mount
+  const hasLanguageChangedRef = useRef(false);
 
   // Admin re-translate state
   const [showRetranslate, setShowRetranslate] = useState(false);
@@ -98,6 +102,10 @@ export default function DebateBoardView({ boardId }) {
     },
   });
 
+  const [respondToOctagonInvite] = useMutation(RESPOND_TO_OCTAGON_INVITE, {
+    onCompleted: () => refetch(),
+  });
+
   useSubscription(DEBATE_BOARD_UPDATED, {
     variables: { debateBoardID: boardId },
     onData: ({ data: subData }) => {
@@ -132,8 +140,14 @@ export default function DebateBoardView({ boardId }) {
     });
   };
 
-  // Auto-translate when the user changes language (not on initial content load)
+  // Auto-translate when the user actively changes language.
+  // Skips the initial mount so opening a board never auto-translates.
   useEffect(() => {
+    if (!hasLanguageChangedRef.current) {
+      // First run is always the initial mount — mark and skip.
+      hasLanguageChangedRef.current = true;
+      return;
+    }
     setShowTranslation(false);
     setTranslatedContent(null);
     setTranslatedTitle(null);
@@ -307,6 +321,8 @@ export default function DebateBoardView({ boardId }) {
         <div className="board-title-area">
           <div className="board-title-row">
             <h1>{showTranslation && translatedTitle ? translatedTitle : board.title}</h1>
+            {board.mode === 'octagon' && <span className="mode-badge-octagon">{t('board.modeOctagon')}</span>}
+            {board.mode === 'battle' && <span className="mode-badge-battle">{t('board.modeBattle')}</span>}
             <button
               className={`board-fav-toggle ${effectiveFavState ? 'starred' : ''}`}
               onClick={handleToggleFav}
@@ -391,7 +407,37 @@ export default function DebateBoardView({ boardId }) {
         </div>
       )}
 
-      <div className={`board-layout ${sidebarHidden ? 'sidebar-hidden' : ''}`}>
+      {board.mode === 'octagon' && board.octagonInfo && (
+        <div className="octagon-pending-banner">
+          {board.octagonInfo.status === 'pending' && (
+            <p><strong>{t('board.octagonPending')}</strong></p>
+          )}
+          <div className="octagon-participant-lists">
+            <span>{t('board.octagonAccepted')}: {(board.octagonInfo.acceptedUserIDs || []).length}</span>
+            {' | '}
+            <span>{t('board.octagonPendingCount')}: {(board.octagonInfo.pendingUserIDs || []).length}</span>
+          </div>
+          {board.octagonInfo.pendingUserIDs?.includes(userId) && (
+            <div className="octagon-respond-btns">
+              <button
+                className="btn-octagon"
+                onClick={() => respondToOctagonInvite({ variables: { boardID: boardId, accept: true } })}
+              >
+                {t('uc.accept')}
+              </button>
+              <button
+                className="btn-secondary"
+                style={{ marginLeft: '8px' }}
+                onClick={() => respondToOctagonInvite({ variables: { boardID: boardId, accept: false } })}
+              >
+                {t('uc.decline')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className={`board-layout ${board.mode === 'battle' || board.mode === 'octagon' ? 'battle-layout' : ''} ${sidebarHidden ? 'sidebar-hidden' : ''}`}>
         <div className="board-content">
           {board.content && (
             <div className="content-translate-bar">
@@ -450,7 +496,7 @@ export default function DebateBoardView({ boardId }) {
           <div className="board-sidebar">
             <div className="arguments-section">
               <div className="arguments-section-header">
-                <h2>{t('board.arguments')} ({argCount})</h2>
+                <h2>{board.mode === 'info' ? t('board.comments') : t('board.arguments')} ({argCount})</h2>
                 <button
                   className="btn-hide-sidebar"
                   onClick={() => setSidebarHidden(true)}
@@ -481,18 +527,23 @@ export default function DebateBoardView({ boardId }) {
                 </button>
               </div>
 
-              <form className="argument-form" onSubmit={handleSubmitArgument}>
-                <textarea
-                  placeholder={t('board.addArgPlaceholder')}
-                  value={newArgument}
-                  onChange={(e) => setNewArgument(e.target.value)}
-                  rows={3}
-                  required
-                />
-                <button type="submit" className="btn-primary">
-                  {t('board.submitArgument')}
-                </button>
-              </form>
+              {board.mode === 'octagon' && board.octagonInfo?.status === 'active' &&
+               !board.octagonInfo?.acceptedUserIDs?.includes(userId) ? (
+                <p className="spectator-note">{t('board.octagonSpectator')}</p>
+              ) : (
+                <form className="argument-form" onSubmit={handleSubmitArgument}>
+                  <textarea
+                    placeholder={t('board.addArgPlaceholder')}
+                    value={newArgument}
+                    onChange={(e) => setNewArgument(e.target.value)}
+                    rows={3}
+                    required
+                  />
+                  <button type="submit" className="btn-primary">
+                    {t('board.submitArgument')}
+                  </button>
+                </form>
+              )}
 
               <div className="arguments-scroll-area">
                 <ArgumentList

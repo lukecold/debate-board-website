@@ -18,6 +18,7 @@ export const COMPLETE_REGISTRATION = gql`
         alias
         isAdmin
         contributionScore
+        battlePoints
         createdAt
       }
     }
@@ -34,6 +35,7 @@ export const LOGIN = gql`
         alias
         isAdmin
         contributionScore
+        battlePoints
         createdAt
       }
     }
@@ -48,6 +50,7 @@ export const ME = gql`
       alias
       isAdmin
       contributionScore
+      battlePoints
       createdAt
     }
   }
@@ -61,6 +64,7 @@ export const GET_PUBLIC_USER = gql`
       alias
       isAdmin
       contributionScore
+      battlePoints
       createdAt
     }
   }
