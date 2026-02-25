@@ -75,14 +75,16 @@ export default function Home() {
   const isOctagonEligible = !!(eligibilityData?.checkOctagonEligibility);
 
   // Lazy alias prefix search (user-service)
-  const [searchAliasPrefix] = useLazyQuery(SEARCH_USERS_BY_ALIAS_PREFIX, {
-    client: userServiceClient,
-    onCompleted: (data) => {
-      const results = data?.searchUsersByAliasPrefix || [];
-      setAliasSuggestions(results);
-      setShowAliasSuggestions(results.length > 0);
-    },
-  });
+  const [searchAliasPrefix, { data: aliasSuggestionData }] = useLazyQuery(
+    SEARCH_USERS_BY_ALIAS_PREFIX,
+    { client: userServiceClient, fetchPolicy: 'network-only' }
+  );
+
+  useEffect(() => {
+    const results = aliasSuggestionData?.searchUsersByAliasPrefix || [];
+    setAliasSuggestions(results);
+    setShowAliasSuggestions(results.length > 0);
+  }, [aliasSuggestionData]);
 
   const { data: boardsData, loading: boardsLoading, error: boardsError, refetch: refetchBoards } = useQuery(GET_DEBATE_BOARDS, {
     variables: { search: search || undefined, tags: selectedTags.length > 0 ? selectedTags : undefined },
