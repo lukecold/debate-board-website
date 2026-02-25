@@ -408,3 +408,9 @@ export const GET_USER_ACTIVITY = gql`
     }
   }
 `;
+
+export const CHECK_OCTAGON_ELIGIBILITY = gql`
+  query CheckOctagonEligibility {
+    checkOctagonEligibility
+  }
+`;

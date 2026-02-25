@@ -313,7 +313,7 @@ export default function DebateBoardView({ boardId }) {
   const board = data.debateBoard;
 
   return (
-    <div className="debate-board-view">
+    <div className={`debate-board-view board-mode-${board.mode}`}>
       <div className="board-header">
         <button className="btn-back" onClick={() => navigate('/')}>
           &larr; {t('board.back')}

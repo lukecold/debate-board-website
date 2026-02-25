@@ -100,3 +100,10 @@ export const CHANGE_ALIAS = gql`
     }
   }
 `;
+
+// Autocomplete: find full aliases matching a prefix.
+export const SEARCH_USERS_BY_ALIAS_PREFIX = gql`
+  query SearchUsersByAliasPrefix($prefix: String!, $limit: Int) {
+    searchUsersByAliasPrefix(prefix: $prefix, limit: $limit)
+  }
+`;

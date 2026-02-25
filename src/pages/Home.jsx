@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   GET_DEBATE_BOARDS,
@@ -20,7 +20,10 @@ import {
   UPDATE_PROPOSAL_FEATURES,
   UPDATE_BOARD_MODE,
   UPDATE_PROPOSAL_MODE,
+  CHECK_OCTAGON_ELIGIBILITY,
 } from '../lib/queries';
+import { SEARCH_USERS_BY_ALIAS_PREFIX } from '../lib/userQueries';
+import { userServiceClient } from '../lib/apollo';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ArgumentList from '../components/ArgumentList';
@@ -40,6 +43,10 @@ export default function Home() {
   const [octagonInstruction, setOctagonInstruction] = useState('');
   const [octagonFeatures, setOctagonFeatures] = useState('');
   const [octagonAliases, setOctagonAliases] = useState('');
+  const [aliasSuggestions, setAliasSuggestions] = useState([]);
+  const [showAliasSuggestions, setShowAliasSuggestions] = useState(false);
+  const [octagonAliasError, setOctagonAliasError] = useState('');
+  const aliasDebounceRef = useRef(null);
   const [proposalTab, setProposalTab] = useState('active');
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [proposalTitle, setProposalTitle] = useState('');
@@ -60,6 +67,23 @@ export default function Home() {
   const [proposalTranslations, setProposalTranslations] = useState({});
 
   // ========== Data Queries ==========
+
+  // Octagon eligibility from backend (only when in octagon mode and logged in)
+  const { data: eligibilityData } = useQuery(CHECK_OCTAGON_ELIGIBILITY, {
+    skip: !user || viewMode !== 'octagon',
+  });
+  const isOctagonEligible = !!(eligibilityData?.checkOctagonEligibility);
+
+  // Lazy alias prefix search (user-service)
+  const [searchAliasPrefix] = useLazyQuery(SEARCH_USERS_BY_ALIAS_PREFIX, {
+    client: userServiceClient,
+    onCompleted: (data) => {
+      const results = data?.searchUsersByAliasPrefix || [];
+      setAliasSuggestions(results);
+      setShowAliasSuggestions(results.length > 0);
+    },
+  });
+
   const { data: boardsData, loading: boardsLoading, error: boardsError, refetch: refetchBoards } = useQuery(GET_DEBATE_BOARDS, {
     variables: { search: search || undefined, tags: selectedTags.length > 0 ? selectedTags : undefined },
   });
@@ -177,15 +201,59 @@ export default function Home() {
     });
   };
 
+  // Extract the current alias token being typed (text after the last comma)
+  const getCurrentAliasToken = (value) => {
+    const lastComma = value.lastIndexOf(',');
+    return value.slice(lastComma + 1).trim();
+  };
+
+  const handleOctagonAliasesChange = (e) => {
+    const value = e.target.value;
+    setOctagonAliases(value);
+    setOctagonAliasError('');
+
+    const token = getCurrentAliasToken(value);
+    if (aliasDebounceRef.current) clearTimeout(aliasDebounceRef.current);
+
+    if (token.length >= 2 && !token.includes('#')) {
+      aliasDebounceRef.current = setTimeout(() => {
+        searchAliasPrefix({ variables: { prefix: token, limit: 8 } });
+      }, 200);
+    } else {
+      setShowAliasSuggestions(false);
+      setAliasSuggestions([]);
+    }
+  };
+
+  const handleAliasSuggestionClick = (alias) => {
+    const lastComma = octagonAliases.lastIndexOf(',');
+    const before = lastComma >= 0 ? octagonAliases.slice(0, lastComma + 1) + ' ' : '';
+    setOctagonAliases(before + alias);
+    setShowAliasSuggestions(false);
+    setAliasSuggestions([]);
+  };
+
   const handleCreateOctagon = (e) => {
     e.preventDefault();
     if (!octagonTitle.trim() || !octagonInstruction.trim()) return;
+
+    // Validate each alias: the part before '#' must be at least 2 characters
+    const aliases = octagonAliases.split(',').map(a => a.trim()).filter(Boolean);
+    for (const alias of aliases) {
+      const hashIdx = alias.indexOf('#');
+      const base = hashIdx >= 0 ? alias.slice(0, hashIdx) : alias;
+      if (base.length < 2) {
+        setOctagonAliasError(t('home.aliasBaseTooShort'));
+        return;
+      }
+    }
+
     createOctagonBoard({
       variables: {
         title: octagonTitle,
         features: octagonFeatures.split(',').map(f => f.trim()).filter(Boolean),
         instruction: octagonInstruction,
-        invitedAliases: octagonAliases.split(',').map(a => a.trim()).filter(Boolean),
+        invitedAliases: aliases,
       },
     });
   };
@@ -496,16 +564,21 @@ export default function Home() {
           </form>
         )}
 
-        {/* OCTAGON! board creation — shown in octagon mode for eligible users */}
-        {viewMode === 'octagon' && user && (user.contributionScore > 10 || (user.battlePoints || 0) > 10) && (
+        {/* OCTAGON! board creation — visible to all in octagon mode, disabled if ineligible */}
+        {viewMode === 'octagon' && user && (
           <div className="octagon-create-section">
             <button
               className="btn-octagon"
-              onClick={() => setShowOctagonCreate(!showOctagonCreate)}
+              disabled={!isOctagonEligible}
+              title={!isOctagonEligible ? t('home.octagonNotEligible') : undefined}
+              onClick={() => isOctagonEligible && setShowOctagonCreate(!showOctagonCreate)}
             >
               {showOctagonCreate ? t('home.cancel') : t('home.createOctagonBtn')}
             </button>
-            {showOctagonCreate && (
+            {!isOctagonEligible && (
+              <p className="octagon-ineligible-hint">{t('home.octagonNotEligible')}</p>
+            )}
+            {showOctagonCreate && isOctagonEligible && (
               <form className="create-form" onSubmit={handleCreateOctagon}>
                 <input
                   type="text"
@@ -527,12 +600,29 @@ export default function Home() {
                   value={octagonFeatures}
                   onChange={(e) => setOctagonFeatures(e.target.value)}
                 />
-                <textarea
-                  placeholder={t('home.octagonAliases')}
-                  value={octagonAliases}
-                  onChange={(e) => setOctagonAliases(e.target.value)}
-                  rows={2}
-                />
+                <div className="alias-autocomplete-wrapper">
+                  <textarea
+                    placeholder={t('home.octagonAliases')}
+                    value={octagonAliases}
+                    onChange={handleOctagonAliasesChange}
+                    onBlur={() => setTimeout(() => setShowAliasSuggestions(false), 150)}
+                    rows={2}
+                  />
+                  {showAliasSuggestions && (
+                    <div className="alias-suggestions">
+                      {aliasSuggestions.map((alias) => (
+                        <div
+                          key={alias}
+                          className="alias-suggestion-item"
+                          onMouseDown={() => handleAliasSuggestionClick(alias)}
+                        >
+                          {alias}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {octagonAliasError && <p className="auth-error">{octagonAliasError}</p>}
                 <button type="submit" className="btn-octagon" disabled={creatingOctagon}>
                   {creatingOctagon ? t('home.creating') : t('home.createOctagonBtn')}
                 </button>

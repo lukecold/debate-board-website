@@ -110,6 +110,8 @@ export const translations = {
     'home.closeVotes': 'voted to close',
     'home.createOctagonBtn': 'Create OCTAGON! Board',
     'home.octagonAliases': 'Invite by alias (comma-separated, e.g. alice#3f7a, bob#1a2b)',
+    'home.octagonNotEligible': 'Need Contribution Score > 10 or Battle Points > 10 to create OCTAGON! boards.',
+    'home.aliasBaseTooShort': 'Alias name before # must be at least 2 characters.',
     'home.loadingBoards': 'Loading boards...',
     'home.noBoards': 'No debate boards found.',
 
@@ -334,6 +336,8 @@ export const translations = {
     'home.closeVotes': '人投票结束',
     'home.createOctagonBtn': '创建八角笼对决',
     'home.octagonAliases': '通过别名邀请（逗号分隔）',
+    'home.octagonNotEligible': '需要贡献分 > 10 或战斗点 > 10 才能创建八角笼对决。',
+    'home.aliasBaseTooShort': '# 前的别名至少需要2个字符。',
     'home.loadingBoards': '加载版面中...',
     'home.noBoards': '未找到辩论版面。',
 
@@ -558,6 +562,8 @@ export const translations = {
     'home.closeVotes': 'votaron para cerrar',
     'home.createOctagonBtn': 'Crear tablero OCTAGON!',
     'home.octagonAliases': 'Invitar por alias (separados por coma)',
+    'home.octagonNotEligible': 'Necesitas Puntuación de Contribución > 10 o Puntos de Batalla > 10.',
+    'home.aliasBaseTooShort': 'El nombre antes de # debe tener al menos 2 caracteres.',
     'home.loadingBoards': 'Cargando tableros...',
     'home.noBoards': 'No se encontraron tableros de debate.',
 
@@ -782,6 +788,8 @@ export const translations = {
     'home.closeVotes': 'ont voté pour fermer',
     'home.createOctagonBtn': 'Créer un tableau OCTAGON!',
     'home.octagonAliases': 'Inviter par alias (séparés par virgule)',
+    'home.octagonNotEligible': 'Il faut un Score de Contribution > 10 ou des Points de Bataille > 10.',
+    'home.aliasBaseTooShort': 'Le nom avant # doit comporter au moins 2 caractères.',
     'home.loadingBoards': 'Chargement des tableaux...',
     'home.noBoards': 'Aucun tableau de débat trouvé.',
 
@@ -1006,6 +1014,8 @@ export const translations = {
     'home.closeVotes': '人が終了に投票',
     'home.createOctagonBtn': '八角籠ボードを作成',
     'home.octagonAliases': 'エイリアスで招待（カンマ区切り）',
+    'home.octagonNotEligible': '貢献スコア > 10 またはバトルポイント > 10 が必要です。',
+    'home.aliasBaseTooShort': '# の前の名前は2文字以上必要です。',
     'home.loadingBoards': 'ボードを読み込み中...',
     'home.noBoards': 'ディベートボードが見つかりません。',
 
@@ -1230,6 +1240,8 @@ export const translations = {
     'home.closeVotes': 'โหวตปิด',
     'home.createOctagonBtn': 'สร้างกระดาน OCTAGON!',
     'home.octagonAliases': 'เชิญด้วยชื่อเล่น (คั่นด้วยจุลภาค)',
+    'home.octagonNotEligible': 'ต้องมีคะแนนการมีส่วนร่วม > 10 หรือคะแนนการต่อสู้ > 10',
+    'home.aliasBaseTooShort': 'ชื่อก่อน # ต้องมีอย่างน้อย 2 ตัวอักษร',
     'home.loadingBoards': 'กำลังโหลดกระดาน...',
     'home.noBoards': 'ไม่พบกระดานถกเถียง',
 
