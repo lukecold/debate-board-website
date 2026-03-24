@@ -399,6 +399,8 @@ export const GET_USER_ACTIVITY = gql`
         argumentID
         voteType
         createdAt
+        argumentContent
+        debateBoardID
       }
       proposalVotes {
         proposalID

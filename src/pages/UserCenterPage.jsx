@@ -277,9 +277,13 @@ export default function UserCenterPage() {
               {(activity?.argumentVotes ?? []).length === 0
                 ? <p className="uc-empty">{t('uc.noVotes')}</p>
                 : (activity.argumentVotes).map((v, i) => (
-                  <div key={i} className="uc-item uc-item-row">
+                  <div
+                    key={i}
+                    className="uc-item uc-item-row uc-item-clickable"
+                    onClick={() => navigate(`/board/${v.debateBoardID}`)}
+                  >
                     <VoteChip type={v.voteType} />
-                    <span className="uc-item-id">#{v.argumentID.slice(0, 8)}</span>
+                    <span className="uc-item-argument-content">{v.argumentContent}</span>
                     <span className="uc-date">{new Date(v.createdAt).toLocaleDateString()}</span>
                   </div>
                 ))
