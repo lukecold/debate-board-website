@@ -51,6 +51,16 @@ export default function DebateBoardView({ boardId }) {
   const [retranslateComment, setRetranslateComment] = useState('');
   const [retranslating, setRetranslating] = useState(false);
 
+  // Admin title editing state
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editTitleText, setEditTitleText] = useState('');
+  const [savingTitle, setSavingTitle] = useState(false);
+
+  // Admin title retranslation state
+  const [showRetranslateTitle, setShowRetranslateTitle] = useState(false);
+  const [retranslateTitleComment, setRetranslateTitleComment] = useState('');
+  const [retranslatingTitle, setRetranslatingTitle] = useState(false);
+
   // Admin features editing state
   const [editingFeatures, setEditingFeatures] = useState(false);
   const [editFeaturesText, setEditFeaturesText] = useState('');
@@ -76,6 +86,15 @@ export default function DebateBoardView({ boardId }) {
       setShowRefine(false);
       setRefineInstruction('');
       setIsRefining(true);
+    },
+  });
+
+  const [updateBoardTitle] = useMutation(UPDATE_DEBATE_BOARD, {
+    onCompleted: () => {
+      setEditingTitle(false);
+      setEditTitleText('');
+      setTranslatedTitle(null);
+      refetch();
     },
   });
 
@@ -254,6 +273,40 @@ export default function DebateBoardView({ boardId }) {
     });
   };
 
+  const handleSaveTitle = () => {
+    const trimmed = editTitleText.trim();
+    if (!trimmed || trimmed === board.title) {
+      setEditingTitle(false);
+      return;
+    }
+    setSavingTitle(true);
+    updateBoardTitle({ variables: { id: boardId, title: trimmed } })
+      .finally(() => setSavingTitle(false));
+  };
+
+  const handleRetranslateTitle = async (e) => {
+    e.preventDefault();
+    setRetranslatingTitle(true);
+    try {
+      const result = await retranslateContent({
+        variables: {
+          contentType: 'board_title',
+          contentID: boardId,
+          targetLanguage,
+          previousTranslation: translatedTitle || '',
+          comment: retranslateTitleComment,
+        },
+      });
+      setTranslatedTitle(result.data.retranslateContent.translatedText);
+      setShowRetranslateTitle(false);
+      setRetranslateTitleComment('');
+    } catch (err) {
+      console.error('Title re-translation failed:', err);
+    } finally {
+      setRetranslatingTitle(false);
+    }
+  };
+
   const handleRefine = (e) => {
     e.preventDefault();
     if (!refineInstruction.trim()) return;
@@ -315,12 +368,61 @@ export default function DebateBoardView({ boardId }) {
   return (
     <div className={`debate-board-view board-mode-${board.mode}`}>
       <div className="board-header">
-        <button className="btn-back" onClick={() => navigate('/')}>
+        <button className="btn-back" onClick={() => navigate(`/?mode=${board.mode}`)}>
           &larr; {t('board.back')}
         </button>
         <div className="board-title-area">
           <div className="board-title-row">
-            <h1>{showTranslation && translatedTitle ? translatedTitle : board.title}</h1>
+            {user.isAdmin && editingTitle ? (
+              <span className="inline-title-edit">
+                <input
+                  type="text"
+                  value={editTitleText}
+                  onChange={(e) => setEditTitleText(e.target.value)}
+                  className="title-edit-input"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveTitle();
+                    if (e.key === 'Escape') setEditingTitle(false);
+                  }}
+                />
+                <button
+                  className="btn-admin btn-small"
+                  onClick={handleSaveTitle}
+                  disabled={savingTitle}
+                >
+                  {savingTitle ? t('board.savingTitle') : '\u2713'}
+                </button>
+                <button
+                  className="btn-secondary btn-small"
+                  onClick={() => setEditingTitle(false)}
+                >
+                  &#10005;
+                </button>
+              </span>
+            ) : (
+              <>
+                <h1>{showTranslation && translatedTitle ? translatedTitle : board.title}</h1>
+                {user.isAdmin && !showTranslation && (
+                  <button
+                    className="btn-edit-tags"
+                    onClick={() => { setEditTitleText(board.title); setEditingTitle(true); }}
+                    title={t('board.editTitle')}
+                  >
+                    &#9998;
+                  </button>
+                )}
+                {user.isAdmin && showTranslation && translatedTitle && (
+                  <button
+                    className="btn-edit-tags"
+                    onClick={() => setShowRetranslateTitle(!showRetranslateTitle)}
+                    title={t('board.retranslateTitle')}
+                  >
+                    &#9998;
+                  </button>
+                )}
+              </>
+            )}
             {board.mode === 'octagon' && <span className="mode-badge-octagon">{t('board.modeOctagon')}</span>}
             {board.mode === 'battle' && <span className="mode-badge-battle">{t('board.modeBattle')}</span>}
             <button
@@ -331,6 +433,25 @@ export default function DebateBoardView({ boardId }) {
               {effectiveFavState ? '\u2605' : '\u2606'}
             </button>
           </div>
+          {user.isAdmin && showRetranslateTitle && (
+            <form className="retranslate-form" onSubmit={handleRetranslateTitle}>
+              <textarea
+                placeholder={t('board.retranslateTitleComment')}
+                value={retranslateTitleComment}
+                onChange={(e) => setRetranslateTitleComment(e.target.value)}
+                rows={2}
+                required
+              />
+              <div className="retranslate-form-actions">
+                <button type="submit" className="btn-primary btn-small" disabled={retranslatingTitle}>
+                  {retranslatingTitle ? t('board.retranslatingTitle') : t('board.retranslateTitleSubmit')}
+                </button>
+                <button type="button" className="btn-secondary btn-small" onClick={() => setShowRetranslateTitle(false)}>
+                  {t('board.cancel')}
+                </button>
+              </div>
+            </form>
+          )}
           <div className="board-dates">
             <span>{t('board.created')} {new Date(board.createdAt).toLocaleDateString()}</span>
             {board.updatedAt !== board.createdAt && (

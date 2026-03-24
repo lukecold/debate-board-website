@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   GET_DEBATE_BOARDS,
   GET_MY_FAVOURITES,
@@ -35,7 +35,9 @@ export default function Home() {
   const [newTitle, setNewTitle] = useState('');
   const [newInstruction, setNewInstruction] = useState('');
   const [newFeatures, setNewFeatures] = useState('');
-  const [viewMode, setViewMode] = useState('info');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewMode = searchParams.get('mode') || 'info';
+  const setViewMode = (mode) => setSearchParams({ mode });
   const [octagonTab, setOctagonTab] = useState('active'); // initiating | active | archived
   // OCTAGON creation form state
   const [showOctagonCreate, setShowOctagonCreate] = useState(false);
