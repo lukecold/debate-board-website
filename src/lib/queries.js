@@ -406,6 +406,7 @@ export const GET_USER_ACTIVITY = gql`
         proposalID
         voteType
         createdAt
+        proposalTitle
       }
     }
   }

@@ -244,7 +244,7 @@ export default function UserCenterPage() {
           </div>
         )}
 
-        {/* Boards (from adopted proposals) */}
+        {/* Boards (from adopted proposals + directly created) */}
         {tab === 'boards' && !activityLoading && (
           <div className="uc-list">
             {(activity?.boards ?? []).length === 0
@@ -296,7 +296,7 @@ export default function UserCenterPage() {
                 : (activity.proposalVotes).map((v, i) => (
                   <div key={i} className="uc-item uc-item-row">
                     <VoteChip type={v.voteType} />
-                    <span className="uc-item-id">#{v.proposalID.slice(0, 8)}</span>
+                    <span className="uc-item-argument-content">{v.proposalTitle}</span>
                     <span className="uc-date">{new Date(v.createdAt).toLocaleDateString()}</span>
                   </div>
                 ))
