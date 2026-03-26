@@ -7,6 +7,26 @@ import { userServiceClient } from '../lib/apollo';
 import { REGISTER, LOGIN } from '../lib/userQueries';
 import { languageOptions } from '../lib/languageOptions';
 
+/** Turn Apollo / network errors into user-friendly messages */
+function friendlyError(err, t) {
+  // Network-level failures (HTTP 4xx/5xx, no connectivity, etc.)
+  if (err.networkError) {
+    const status = err.networkError.statusCode;
+    if (status === 422 || status === 400) return t('login.errBadRequest');
+    if (status === 429) return t('login.errTooMany');
+    if (status >= 500) return t('login.errServer');
+    return t('login.errNetwork');
+  }
+  // GraphQL-level errors — return the first message
+  const gqlMsg = err.graphQLErrors?.[0]?.message;
+  if (gqlMsg) {
+    if (gqlMsg.includes('invalid credentials')) return t('login.errInvalidCredentials');
+    if (gqlMsg.includes('not verified')) return t('login.errNotVerified');
+    return gqlMsg;
+  }
+  return t('login.errUnknown');
+}
+
 export default function LoginPage() {
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'sent'
   const [email, setEmail] = useState('');
@@ -27,7 +47,7 @@ export default function LoginPage() {
       setDevLink(result !== 'sent' ? result : '');
       setMode('sent');
     },
-    onError: (err) => setError(err.message),
+    onError: (err) => setError(friendlyError(err, t)),
   });
 
   const [loginMutation, { loading: loggingIn }] = useMutation(LOGIN, {
@@ -36,16 +56,18 @@ export default function LoginPage() {
       login(data.login);
       navigate('/');
     },
-    onError: (err) => setError(err.message),
+    onError: (err) => setError(friendlyError(err, t)),
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
+    const trimmedEmail = email.trim();
+    setEmail(trimmedEmail);
     if (mode === 'login') {
-      loginMutation({ variables: { email, password } });
+      loginMutation({ variables: { email: trimmedEmail, password } });
     } else if (mode === 'register') {
-      registerMutation({ variables: { email } });
+      registerMutation({ variables: { email: trimmedEmail } });
     }
   };
 
