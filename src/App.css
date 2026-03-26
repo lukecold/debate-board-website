@@ -3680,9 +3680,8 @@ body {
 
 .meeting-message-hover-actions {
   position: absolute;
-  bottom: 100%;
-  right: 140px;
-  margin-bottom: -4px;
+  top: 0;
+  right: 160px;
   display: none;
   gap: 2px;
   background: white;
