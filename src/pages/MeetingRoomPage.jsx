@@ -507,25 +507,25 @@ export default function MeetingRoomPage() {
 
             {summary?.status === 'generating' && (
               <div className="meeting-summary-generating">
-                {t('meetings.generating')}
+                Generating summary...
               </div>
             )}
 
-            {summary ? (
+            {summary?.content ? (
               <div className="meeting-summary-content">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {summary.content}
                 </ReactMarkdown>
               </div>
-            ) : (
+            ) : summary?.status !== 'generating' && (
               <div className="meeting-summary-empty">
                 {t('meetings.noSummary')}
               </div>
             )}
 
-            {summary && (
+            {summary?.updatedAt && (
               <div className="meeting-summary-meta">
-                {summary.messageCount} messages &middot; {formatTime(summary.updatedAt)}
+                {summary.messageCount} messages &middot; Last updated {formatTime(summary.updatedAt)}
               </div>
             )}
           </div>
