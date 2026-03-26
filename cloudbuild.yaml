@@ -1,8 +1,8 @@
 substitutions:
-  _AR_HOSTNAME: asia-southeast3-docker.pkg.dev
+  _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
   _AR_PROJECT_ID: project-36beba7a-3d48-4492-984
   _AR_REPOSITORY: cloud-run-source-deploy
-  _DEPLOY_REGION: asia-southeast3
+  _DEPLOY_REGION: asia-southeast1
   _SERVICE_NAME: debate-board-website
   _DEBATE_BOARD_API_URL: https://debate-board-service-qfq3w5kpra-eu.a.run.app/query
   _DEBATE_BOARD_WS_URL: wss://debate-board-service-qfq3w5kpra-eu.a.run.app/query
