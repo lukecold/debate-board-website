@@ -278,8 +278,8 @@ export default function MeetingRoomPage() {
       return;
     }
 
-    // Enter to send (without Shift)
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Enter to send (without Shift, and not during IME composition)
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
     }
