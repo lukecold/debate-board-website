@@ -3692,8 +3692,8 @@ body {
   z-index: 5;
 }
 
-.meeting-message:hover .meeting-message-hover-actions,
-.meeting-message-picker-open .meeting-message-hover-actions {
+.meeting-message:hover > .meeting-message-hover-actions,
+.meeting-message-picker-open > .meeting-message-hover-actions {
   display: flex;
 }
 

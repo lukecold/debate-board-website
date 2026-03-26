@@ -607,12 +607,14 @@ export default function MeetingRoomPage() {
                       )}
                     </div>
                     {renderReactions(msg)}
-                    {msg.replyCount > 0 && !expandedThreads[msg.id] && (
+                    {msg.replyCount > 0 && (
                       <button
                         className="meeting-thread-toggle"
                         onClick={() => toggleThread(msg.id)}
                       >
-                        {`${msg.replyCount} ${t('meetings.replies')}`}
+                        {expandedThreads[msg.id]
+                          ? t('meetings.hideReplies')
+                          : `${msg.replyCount} ${t('meetings.replies')}`}
                       </button>
                     )}
                   </div>
@@ -643,17 +645,6 @@ export default function MeetingRoomPage() {
                           }}
                         />
                         {renderReactions(reply)}
-                        <div className="meeting-message-footer">
-                          <button
-                            className="meeting-reply-btn"
-                            onClick={() => {
-                              setReplyToThread(msg.id);
-                              textareaRef.current?.focus();
-                            }}
-                          >
-                            {t('meetings.reply')}
-                          </button>
-                        </div>
                       </div>
                     ))}
                     {replyToThread === msg.id ? (
