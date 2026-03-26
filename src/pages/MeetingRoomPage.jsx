@@ -57,6 +57,9 @@ export default function MeetingRoomPage() {
   const [replyToThread, setReplyToThread] = useState(null);
   const [expandedThreads, setExpandedThreads] = useState({});
 
+  // Track optimistic message IDs so subscription can detect replacements
+  const optimisticIdsRef = useRef(new Set());
+
   // Emoji picker state
   const [emojiPickerMessageId, setEmojiPickerMessageId] = useState(null);
   const [emojiSearch, setEmojiSearch] = useState('');
@@ -130,28 +133,51 @@ export default function MeetingRoomPage() {
       if (!newMsg) return;
 
       if (!newMsg.parentMessageID) {
-        // Top-level message
+        // Top-level message — replace optimistic or append
         setMessages((prev) => {
           if (prev.some((m) => m.id === newMsg.id)) return prev;
+          // Replace matching optimistic message from same user
+          const optimisticIdx = prev.findIndex(
+            (m) => m.__optimistic && m.content === newMsg.content && m.userID === newMsg.userID
+          );
+          if (optimisticIdx !== -1) {
+            optimisticIdsRef.current.delete(prev[optimisticIdx].id);
+            const next = [...prev];
+            next[optimisticIdx] = newMsg;
+            return next;
+          }
           return [...prev, newMsg];
         });
       } else {
-        // Thread message - update the thread if it's expanded
+        // Thread message — replace optimistic or append, track if it was a replacement
+        let replacedOptimistic = false;
         setThreadMessages((prev) => {
           const parentId = newMsg.parentMessageID;
           const existing = prev[parentId];
           if (!existing) return prev;
           if (existing.some((m) => m.id === newMsg.id)) return prev;
+          const optimisticIdx = existing.findIndex(
+            (m) => m.__optimistic && m.content === newMsg.content && m.userID === newMsg.userID
+          );
+          if (optimisticIdx !== -1) {
+            replacedOptimistic = true;
+            optimisticIdsRef.current.delete(existing[optimisticIdx].id);
+            const next = [...existing];
+            next[optimisticIdx] = newMsg;
+            return { ...prev, [parentId]: next };
+          }
           return { ...prev, [parentId]: [...existing, newMsg] };
         });
-        // Update reply count on the parent message
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === newMsg.parentMessageID
-              ? { ...m, replyCount: (m.replyCount || 0) + 1 }
-              : m
-          )
-        );
+        // Only bump reply count if this wasn't replacing an optimistic message
+        if (!replacedOptimistic) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === newMsg.parentMessageID
+                ? { ...m, replyCount: (m.replyCount || 0) + 1 }
+                : m
+            )
+          );
+        }
       }
     },
   });
@@ -284,6 +310,44 @@ export default function MeetingRoomPage() {
       mentionSet.push('assistant');
     }
 
+    // Optimistic UI: show message immediately
+    const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const optimisticMsg = {
+      id: optimisticId,
+      meetingRoomID: roomId,
+      userID: user?.id || '',
+      userAlias: user?.alias || user?.email?.split('@')[0] || 'me',
+      userAvatarUrl: user?.avatarUrl || null,
+      content,
+      parentMessageID: replyToThread || null,
+      isAIResponse: false,
+      mentions: mentionSet,
+      replyCount: 0,
+      reactions: [],
+      createdAt: new Date().toISOString(),
+      __optimistic: true,
+    };
+
+    optimisticIdsRef.current.add(optimisticId);
+    if (!replyToThread) {
+      setMessages((prev) => [...prev, optimisticMsg]);
+    } else {
+      setThreadMessages((prev) => {
+        const existing = prev[replyToThread] || [];
+        return { ...prev, [replyToThread]: [...existing, optimisticMsg] };
+      });
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === replyToThread
+            ? { ...m, replyCount: (m.replyCount || 0) + 1 }
+            : m
+        )
+      );
+    }
+
+    setMessageText('');
+    setReplyToThread(null);
+
     try {
       await sendMessage({
         variables: {
@@ -294,12 +358,28 @@ export default function MeetingRoomPage() {
           userAvatarUrl: user?.avatarUrl || undefined,
         },
       });
-      setMessageText('');
-      setReplyToThread(null);
     } catch (err) {
       console.error('Failed to send message:', err);
+      // Remove the optimistic message on failure
+      if (!optimisticMsg.parentMessageID) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      } else {
+        setThreadMessages((prev) => {
+          const parentId = optimisticMsg.parentMessageID;
+          const existing = prev[parentId];
+          if (!existing) return prev;
+          return { ...prev, [parentId]: existing.filter((m) => m.id !== optimisticId) };
+        });
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === optimisticMsg.parentMessageID
+              ? { ...m, replyCount: Math.max(0, (m.replyCount || 0) - 1) }
+              : m
+          )
+        );
+      }
     }
-  }, [messageText, roomId, replyToThread, sendMessage]);
+  }, [messageText, roomId, replyToThread, sendMessage, user]);
 
   // --- Toggle thread ---
   const toggleThread = useCallback((messageId) => {

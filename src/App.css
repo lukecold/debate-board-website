@@ -3697,6 +3697,11 @@ body {
   display: flex;
 }
 
+/* Hide parent message toolbar when hovering over a thread reply inside it */
+.meeting-message:has(.meeting-thread .meeting-message:hover) > .meeting-message-hover-actions {
+  display: none;
+}
+
 .meeting-message-hover-actions button {
   width: 30px;
   height: 30px;
