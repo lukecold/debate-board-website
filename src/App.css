@@ -809,10 +809,18 @@ body {
   z-index: 100;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .header-left h2 {
   font-size: 20px;
   font-weight: 700;
   color: #111827;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .header-right {
