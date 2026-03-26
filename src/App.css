@@ -3680,8 +3680,8 @@ body {
 
 .meeting-message-hover-actions {
   position: absolute;
-  top: -14px;
-  left: 56px;
+  top: -18px;
+  right: 0;
   display: none;
   gap: 2px;
   background: white;
@@ -3730,7 +3730,7 @@ body {
 .meeting-emoji-picker {
   position: absolute;
   top: 22px;
-  left: 56px;
+  right: 0;
   width: 320px;
   background: white;
   border: 1px solid #e5e7eb;
