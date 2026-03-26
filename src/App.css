@@ -811,8 +811,8 @@ body {
 
 .header-left {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0;
 }
 
 .header-left h2 {
@@ -861,9 +861,9 @@ body {
   padding: 2px 10px;
   border-radius: 8px;
   margin-left: 10px;
-  vertical-align: middle;
   cursor: default;
   pointer-events: none;
+  white-space: nowrap;
 }
 
 .btn-small {
