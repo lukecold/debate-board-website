@@ -248,6 +248,24 @@ export default function MeetingRoomPage() {
     }
   }, [mentionQuery, mentionResults, mentionIndex, insertMention]);
 
+  // --- Click outside to cancel empty reply ---
+  useEffect(() => {
+    if (!replyToThread) return;
+    const handleClickOutside = (e) => {
+      const threadInput = document.querySelector('.meeting-thread-reply-input');
+      if (threadInput && !threadInput.contains(e.target) && !messageText.trim()) {
+        setReplyToThread(null);
+        setExpandedThreads((prev) => {
+          const next = { ...prev };
+          delete next[replyToThread];
+          return next;
+        });
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [replyToThread, messageText]);
+
   // --- Auto-scroll ---
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -565,27 +583,24 @@ export default function MeetingRoomPage() {
                 ) : null}
                 <div className="meeting-message-body">
                   <div className="meeting-message-footer">
-                    {(msg.replyCount > 0 || expandedThreads[msg.id]) ? (
+                    {msg.replyCount > 0 && !expandedThreads[msg.id] && (
                       <button
                         className="meeting-thread-toggle"
                         onClick={() => toggleThread(msg.id)}
                       >
-                        {expandedThreads[msg.id]
-                          ? t('meetings.hideReplies')
-                          : `${msg.replyCount} ${t('meetings.replies')}`}
-                      </button>
-                    ) : (
-                      <button
-                        className="meeting-reply-btn"
-                        onClick={() => {
-                          setReplyToThread(msg.id);
-                          setExpandedThreads((prev) => ({ ...prev, [msg.id]: true }));
-                          setTimeout(() => textareaRef.current?.focus(), 50);
-                        }}
-                      >
-                        {t('meetings.reply')}
+                        {`${msg.replyCount} ${t('meetings.replies')}`}
                       </button>
                     )}
+                    <button
+                      className="meeting-reply-btn"
+                      onClick={() => {
+                        setReplyToThread(msg.id);
+                        setExpandedThreads((prev) => ({ ...prev, [msg.id]: true }));
+                        setTimeout(() => textareaRef.current?.focus(), 50);
+                      }}
+                    >
+                      {t('meetings.reply')}
+                    </button>
                   </div>
                   <div className="meeting-message-body-right">
                     <div className="meeting-message-content-row">
