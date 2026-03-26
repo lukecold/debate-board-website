@@ -309,7 +309,7 @@ export default function MeetingRoomPage() {
     }
     try {
       await deleteRoom({ variables: { id: roomId } });
-      navigate('/');
+      navigate('/?mode=meetings');
     } catch (err) {
       console.error('Failed to delete room:', err);
     }
@@ -471,7 +471,7 @@ export default function MeetingRoomPage() {
     <div className="meeting-room-page">
       {/* Header */}
       <div className="meeting-header">
-        <button className="meeting-back-btn" onClick={() => navigate('/')}>
+        <button className="meeting-back-btn" onClick={() => navigate('/?mode=meetings')}>
           &larr; {t('meetings.backToRooms')}
         </button>
         <div className="meeting-header-info">
