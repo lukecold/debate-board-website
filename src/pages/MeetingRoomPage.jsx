@@ -35,6 +35,17 @@ function isSameUser(msg, prevMsg) {
   return msg.userID === prevMsg.userID && !msg.isAIResponse === !prevMsg.isAIResponse;
 }
 
+function renderMessageContent(msg) {
+  if (msg.isAIResponse) {
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {msg.content}
+      </ReactMarkdown>
+    );
+  }
+  return <span dangerouslySetInnerHTML={{ __html: highlightMentions(msg.content) }} />;
+}
+
 function aliasColor(alias) {
   let hash = 0;
   for (let i = 0; i < alias.length; i++) {
@@ -676,10 +687,9 @@ export default function MeetingRoomPage() {
                   </div>
                   <div className="meeting-message-body-right">
                     <div className="meeting-message-content-row">
-                      <div
-                        className="meeting-message-content"
-                        dangerouslySetInnerHTML={{ __html: highlightMentions(msg.content) }}
-                      />
+                      <div className="meeting-message-content">
+                        {renderMessageContent(msg)}
+                      </div>
                       {continuation && (
                         <span className="meeting-message-time-hover">
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -718,12 +728,9 @@ export default function MeetingRoomPage() {
                             {formatTime(reply.createdAt)}
                           </span>
                         </div>
-                        <div
-                          className="meeting-message-content"
-                          dangerouslySetInnerHTML={{
-                            __html: highlightMentions(reply.content),
-                          }}
-                        />
+                        <div className="meeting-message-content">
+                          {renderMessageContent(reply)}
+                        </div>
                         {renderReactions(reply)}
                       </div>
                     ))}
