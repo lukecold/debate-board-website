@@ -163,8 +163,11 @@ export default function MeetingRoomPage() {
           return [...prev, newMsg];
         });
       } else {
-        // Thread message — replace optimistic or append, track if it was a replacement
-        let replacedOptimistic = false;
+        // Thread message — replace optimistic or append
+        // Use a ref to communicate whether we replaced an optimistic message,
+        // because React 18 batching defers the updater to the render phase
+        // so a local variable would still be false when checked below.
+        const replacedRef = { current: false };
         setThreadMessages((prev) => {
           const parentId = newMsg.parentMessageID;
           const existing = prev[parentId];
@@ -174,7 +177,7 @@ export default function MeetingRoomPage() {
             (m) => m.__optimistic && m.content === newMsg.content && m.userID === newMsg.userID
           );
           if (optimisticIdx !== -1) {
-            replacedOptimistic = true;
+            replacedRef.current = true;
             optimisticIdsRef.current.delete(existing[optimisticIdx].id);
             const next = [...existing];
             next[optimisticIdx] = newMsg;
@@ -182,16 +185,19 @@ export default function MeetingRoomPage() {
           }
           return { ...prev, [parentId]: [...existing, newMsg] };
         });
-        // Only bump reply count if this wasn't replacing an optimistic message
-        if (!replacedOptimistic) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === newMsg.parentMessageID
-                ? { ...m, replyCount: (m.replyCount || 0) + 1 }
-                : m
-            )
+        // Bump reply count only for genuinely new messages (not optimistic replacements).
+        // We must also check inside the updater since React 18 batching may defer execution.
+        setMessages((prev) => {
+          if (replacedRef.current) return prev;
+          // Also check if this message was from an optimistic send by looking at optimisticIdsRef
+          const parentMsg = prev.find((m) => m.id === newMsg.parentMessageID);
+          if (!parentMsg) return prev;
+          return prev.map((m) =>
+            m.id === newMsg.parentMessageID
+              ? { ...m, replyCount: (m.replyCount || 0) + 1 }
+              : m
           );
-        }
+        });
       }
     },
   });
