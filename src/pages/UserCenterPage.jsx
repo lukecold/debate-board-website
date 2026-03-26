@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { languageOptions } from '../lib/languageOptions';
 import { client, userServiceClient } from '../lib/apollo';
 import { GET_USER_ACTIVITY, GET_MY_OCTAGON_INVITES, RESPOND_TO_OCTAGON_INVITE, GET_MY_ORG, UPDATE_ORG_SETTINGS } from '../lib/queries';
 import { isAdminRole } from '../lib/roles';
@@ -40,7 +41,7 @@ export default function UserCenterPage() {
   const { userID } = useParams();
   const navigate = useNavigate();
   const { user: me, login } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   const isOwnProfile = me && me.id === userID;
 
@@ -365,6 +366,20 @@ export default function UserCenterPage() {
         {/* Settings (own profile only) */}
         {tab === 'settings' && isOwnProfile && (
           <div className="uc-settings">
+
+            {/* ── Language ────────────────────────────────────────────── */}
+            <section className="uc-settings-section">
+              <h3>{t('uc.language')}</h3>
+              <select
+                className="btn-lang-toggle"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                {languageOptions.map(({ code, label }) => (
+                  <option key={code} value={code}>{label}</option>
+                ))}
+              </select>
+            </section>
 
             {/* ── Password change ─────────────────────────────────────── */}
             <section className="uc-settings-section">

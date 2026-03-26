@@ -31,7 +31,7 @@ export default function Header() {
       </div>
       <div className="header-right">
         <select
-          className="btn-lang-toggle"
+          className="btn-lang-toggle header-lang-desktop"
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
         >
