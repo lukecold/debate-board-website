@@ -579,7 +579,8 @@ export default function MeetingRoomPage() {
                         className="meeting-reply-btn"
                         onClick={() => {
                           setReplyToThread(msg.id);
-                          textareaRef.current?.focus();
+                          setExpandedThreads((prev) => ({ ...prev, [msg.id]: true }));
+                          setTimeout(() => textareaRef.current?.focus(), 50);
                         }}
                       >
                         {t('meetings.reply')}
