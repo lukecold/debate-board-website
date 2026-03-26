@@ -80,6 +80,7 @@ export default function MeetingRoomPage() {
 
   const { data: messagesData, loading: messagesLoading } = useQuery(GET_MEETING_MESSAGES, {
     variables: { roomID: roomId, threadParentID: null },
+    fetchPolicy: 'network-only',
   });
   const [messages, setMessages] = useState([]);
 
