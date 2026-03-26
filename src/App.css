@@ -3343,6 +3343,7 @@ body {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  position: relative;
 }
 
 .meeting-thread-reply-input .meeting-textarea {
