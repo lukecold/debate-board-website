@@ -1,12 +1,12 @@
 export const translations = {
   en: {
     // Header
-    'header.title': 'Debate Board',
+    'header.title': 'The Board',
     'header.logout': 'Logout',
     'header.admin': 'Admin',
 
     // Login
-    'login.title': 'Debate Board',
+    'login.title': 'The Board',
     'login.signIn': 'Sign in to your account',
     'login.createAccount': 'Create a new account',
     'login.verifyEmail': 'Verify your email',
@@ -284,12 +284,12 @@ export const translations = {
 
   zh: {
     // Header
-    'header.title': '辩论板',
+    'header.title': 'The Board',
     'header.logout': '退出登录',
     'header.admin': '管理员',
 
     // Login
-    'login.title': '辩论板',
+    'login.title': 'The Board',
     'login.signIn': '登录您的账户',
     'login.createAccount': '创建新账户',
     'login.verifyEmail': '验证您的邮箱',
@@ -565,12 +565,12 @@ export const translations = {
 
   es: {
     // Header
-    'header.title': 'Tablero de Debate',
+    'header.title': 'The Board',
     'header.logout': 'Cerrar sesión',
     'header.admin': 'Admin',
 
     // Login
-    'login.title': 'Tablero de Debate',
+    'login.title': 'The Board',
     'login.signIn': 'Inicia sesión en tu cuenta',
     'login.createAccount': 'Crear una nueva cuenta',
     'login.verifyEmail': 'Verifica tu correo electrónico',
@@ -846,12 +846,12 @@ export const translations = {
 
   fr: {
     // Header
-    'header.title': 'Tableau de débat',
+    'header.title': 'The Board',
     'header.logout': 'Se déconnecter',
     'header.admin': 'Admin',
 
     // Login
-    'login.title': 'Tableau de débat',
+    'login.title': 'The Board',
     'login.signIn': 'Connectez-vous à votre compte',
     'login.createAccount': 'Créer un nouveau compte',
     'login.verifyEmail': 'Vérifiez votre e-mail',
@@ -1127,12 +1127,12 @@ export const translations = {
 
   ja: {
     // Header
-    'header.title': 'ディベートボード',
+    'header.title': 'The Board',
     'header.logout': 'ログアウト',
     'header.admin': '管理者',
 
     // Login
-    'login.title': 'ディベートボード',
+    'login.title': 'The Board',
     'login.signIn': 'アカウントにサインイン',
     'login.createAccount': '新しいアカウントを作成',
     'login.verifyEmail': 'メールアドレスを確認',
@@ -1408,12 +1408,12 @@ export const translations = {
 
   th: {
     // Header
-    'header.title': 'กระดานถกเถียง',
+    'header.title': 'The Board',
     'header.logout': 'ออกจากระบบ',
     'header.admin': 'ผู้ดูแล',
 
     // Login
-    'login.title': 'กระดานถกเถียง',
+    'login.title': 'The Board',
     'login.signIn': 'เข้าสู่ระบบบัญชีของคุณ',
     'login.createAccount': 'สร้างบัญชีใหม่',
     'login.verifyEmail': 'ยืนยันอีเมลของคุณ',
@@ -1689,12 +1689,12 @@ export const translations = {
 
   ru: {
     // Header
-    'header.title': 'Доска дебатов',
+    'header.title': 'The Board',
     'header.logout': 'Выйти',
     'header.admin': 'Админ',
 
     // Login
-    'login.title': 'Доска дебатов',
+    'login.title': 'The Board',
     'login.signIn': 'Войдите в свой аккаунт',
     'login.createAccount': 'Создать новый аккаунт',
     'login.verifyEmail': 'Подтвердите электронную почту',
@@ -1970,12 +1970,12 @@ export const translations = {
 
   ko: {
     // Header
-    'header.title': '토론 게시판',
+    'header.title': 'The Board',
     'header.logout': '로그아웃',
     'header.admin': '관리자',
 
     // Login
-    'login.title': '토론 게시판',
+    'login.title': 'The Board',
     'login.signIn': '계정에 로그인',
     'login.createAccount': '새 계정 만들기',
     'login.verifyEmail': '이메일 인증',
