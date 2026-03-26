@@ -84,7 +84,7 @@ export default function UserCenterPage() {
   // Org settings (own profile, admin roles only)
   const { data: orgData, refetch: refetchOrg } = useQuery(GET_MY_ORG, {
     client,
-    skip: !isOwnProfile || !isAdminRole(me?.role),
+    skip: !isOwnProfile,
   });
   const [updateOrgSettings, { loading: updatingOrg }] = useMutation(UPDATE_ORG_SETTINGS, { client });
   const [orgNameInput, setOrgNameInput] = useState('');
@@ -176,8 +176,8 @@ export default function UserCenterPage() {
     ...(isOwnProfile ? [{ key: 'invites', label: t('uc.octagonInvites') }] : []),
     // Settings tab: own profile only
     ...(isOwnProfile ? [{ key: 'settings', label: t('uc.tabSettings') }] : []),
-    // Org tab: own profile only, for admin-role users
-    ...(isOwnProfile && isAdminRole(me?.role) ? [{ key: 'org', label: t('uc.tabOrg') }] : []),
+    // Org tab: own profile only, when user has an org
+    ...(isOwnProfile && orgData?.myOrg ? [{ key: 'org', label: t('uc.tabOrg') }] : []),
   ];
 
   return (
