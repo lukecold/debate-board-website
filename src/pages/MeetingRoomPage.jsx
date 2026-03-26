@@ -757,6 +757,25 @@ export default function MeetingRoomPage() {
                           rows={1}
                           autoFocus
                         />
+                        {/* Mention dropdown for thread reply */}
+                        {mentionQuery != null && mentionResults.length > 0 && (
+                          <div className="meeting-mention-dropdown" ref={mentionDropdownRef}>
+                            {mentionResults.map((alias, idx) => (
+                              <div
+                                key={alias}
+                                className={`meeting-mention-option ${
+                                  idx === mentionIndex ? 'meeting-mention-option-active' : ''
+                                }`}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  insertMention(alias);
+                                }}
+                              >
+                                @{alias}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         <div className="meeting-thread-reply-actions">
                           <button className="meeting-send-btn meeting-send-btn-small" onClick={handleSend} disabled={!messageText.trim()}>
                             {t('meetings.send')}
