@@ -13,11 +13,8 @@ export default function Header() {
   const { t, language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
-  // Show org badge for users whose email domain has an org
-  // (admin role users are platform admins, not org members)
-  const isPlatformAdmin = user?.role === 'admin' || user?.role === 'owner';
-  const { data: orgData } = useQuery(GET_MY_ORG, { client, skip: isPlatformAdmin });
-  const orgName = !isPlatformAdmin ? orgData?.myOrg?.name : null;
+  const { data: orgData } = useQuery(GET_MY_ORG, { client });
+  const orgName = orgData?.myOrg?.name;
 
   const handleLogout = () => {
     logout();

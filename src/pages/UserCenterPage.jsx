@@ -84,7 +84,7 @@ export default function UserCenterPage() {
   // Org settings (own profile, admin roles only)
   const { data: orgData, refetch: refetchOrg } = useQuery(GET_MY_ORG, {
     client,
-    skip: !isOwnProfile || me?.role === 'admin' || me?.role === 'owner',
+    skip: !isOwnProfile,
   });
   const [updateOrgSettings, { loading: updatingOrg }] = useMutation(UPDATE_ORG_SETTINGS, { client });
   const [orgNameInput, setOrgNameInput] = useState('');
