@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import ActivatePage from './pages/ActivatePage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import UserCenterPage from './pages/UserCenterPage';
+import MeetingRoomPage from './pages/MeetingRoomPage';
 import Header from './components/Header';
 import './App.css';
 
@@ -50,6 +51,7 @@ function App() {
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/board/:boardId" element={<ProtectedRoute><DebateBoardPage /></ProtectedRoute>} />
               <Route path="/user/:userID" element={<ProtectedRoute><UserCenterPage /></ProtectedRoute>} />
+              <Route path="/meeting/:roomId" element={<ProtectedRoute><MeetingRoomPage /></ProtectedRoute>} />
             </Routes>
           </div>
         </Router>

@@ -21,7 +21,14 @@ export default function Header() {
     navigate('/login');
   };
 
-  const badge = roleBadgeLabel(user?.role);
+  // Badge logic: if admin + has org → show "Org Admin" badge, hover reveals both
+  const role = user?.role;
+  const isAdminWithOrg = (role === 'admin' || role === 'owner') && !!orgName;
+  const displayBadge = isAdminWithOrg ? 'Org Admin' : roleBadgeLabel(role);
+  const displayBadgeClass = isAdminWithOrg ? 'role-badge role-org-admin' : roleBadgeClass(role);
+  const hoverTitle = isAdminWithOrg
+    ? `${roleBadgeLabel(role)} · Org Admin`
+    : roleBadgeLabel(role) || '';
 
   return (
     <header className="app-header">
@@ -47,7 +54,7 @@ export default function Header() {
           title={t('header.viewProfile')}
         >
           {user?.alias}
-          {badge && <span className={roleBadgeClass(user?.role)}>{badge}</span>}
+          {displayBadge && <span className={displayBadgeClass} title={hoverTitle}>{displayBadge}</span>}
         </button>
 
         <button className="btn-secondary btn-small" onClick={handleLogout}>

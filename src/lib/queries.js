@@ -480,3 +480,159 @@ export const UPDATE_ORG_SETTINGS = gql`
     }
   }
 `;
+
+// ── Meetings ────────────────────────────────────────────────────────────────
+
+export const GET_MEETING_ROOMS = gql`
+  query GetMeetingRooms {
+    meetingRooms {
+      id
+      orgDomain
+      name
+      description
+      createdBy
+      createdByAlias
+      createdAt
+    }
+  }
+`;
+
+export const GET_MEETING_ROOM = gql`
+  query GetMeetingRoom($id: ID!) {
+    meetingRoom(id: $id) {
+      id
+      orgDomain
+      name
+      description
+      createdBy
+      createdByAlias
+      createdAt
+    }
+  }
+`;
+
+export const GET_MEETING_MESSAGES = gql`
+  query GetMeetingMessages($roomID: ID!, $threadParentID: ID) {
+    meetingMessages(roomID: $roomID, threadParentID: $threadParentID) {
+      id
+      meetingRoomID
+      userID
+      userAlias
+      userAvatarUrl
+      content
+      parentMessageID
+      isAIResponse
+      mentions
+      replyCount
+      reactions {
+        emoji
+        count
+        userReacted
+        users
+      }
+      createdAt
+    }
+  }
+`;
+
+export const GET_MEETING_SUMMARY = gql`
+  query GetMeetingSummary($roomID: ID!) {
+    meetingSummary(roomID: $roomID) {
+      id
+      meetingRoomID
+      content
+      messageCount
+      status
+      updatedAt
+    }
+  }
+`;
+
+export const CREATE_MEETING_ROOM = gql`
+  mutation CreateMeetingRoom($name: String!, $description: String) {
+    createMeetingRoom(name: $name, description: $description) {
+      id
+      name
+      description
+      createdByAlias
+      createdAt
+    }
+  }
+`;
+
+export const DELETE_MEETING_ROOM = gql`
+  mutation DeleteMeetingRoom($id: ID!) {
+    deleteMeetingRoom(id: $id)
+  }
+`;
+
+export const SEND_MEETING_MESSAGE = gql`
+  mutation SendMeetingMessage($roomID: ID!, $content: String!, $parentMessageID: ID, $mentions: [String!], $userAvatarUrl: String) {
+    sendMeetingMessage(roomID: $roomID, content: $content, parentMessageID: $parentMessageID, mentions: $mentions, userAvatarUrl: $userAvatarUrl) {
+      id
+      userID
+      userAlias
+      userAvatarUrl
+      content
+      parentMessageID
+      isAIResponse
+      mentions
+      replyCount
+      reactions {
+        emoji
+        count
+        userReacted
+        users
+      }
+      createdAt
+    }
+  }
+`;
+
+export const MEETING_MESSAGE_ADDED = gql`
+  subscription MeetingMessageAdded($roomID: ID!) {
+    meetingMessageAdded(roomID: $roomID) {
+      id
+      meetingRoomID
+      userID
+      userAlias
+      userAvatarUrl
+      content
+      parentMessageID
+      isAIResponse
+      mentions
+      replyCount
+      reactions {
+        emoji
+        count
+        userReacted
+        users
+      }
+      createdAt
+    }
+  }
+`;
+
+export const TOGGLE_MEETING_REACTION = gql`
+  mutation ToggleMeetingReaction($messageID: ID!, $emoji: String!) {
+    toggleMeetingReaction(messageID: $messageID, emoji: $emoji) {
+      emoji
+      count
+      userReacted
+      users
+    }
+  }
+`;
+
+export const MEETING_SUMMARY_UPDATED = gql`
+  subscription MeetingSummaryUpdated($roomID: ID!) {
+    meetingSummaryUpdated(roomID: $roomID) {
+      id
+      meetingRoomID
+      content
+      messageCount
+      status
+      updatedAt
+    }
+  }
+`;

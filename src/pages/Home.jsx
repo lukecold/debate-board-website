@@ -22,6 +22,10 @@ import {
   UPDATE_PROPOSAL_MODE,
   CHECK_OCTAGON_ELIGIBILITY,
   GET_RECOMMENDATIONS,
+  GET_MY_ORG,
+  GET_MEETING_ROOMS,
+  CREATE_MEETING_ROOM,
+  DELETE_MEETING_ROOM,
 } from '../lib/queries';
 import { SEARCH_USERS_BY_ALIAS_PREFIX } from '../lib/userQueries';
 import { userServiceClient } from '../lib/apollo';
@@ -100,7 +104,7 @@ export default function Home() {
   const { data: proposalsData, loading: proposalsLoading, refetch: refetchProposals } = useQuery(GET_PROPOSALS, {
     variables: {
       status: proposalTab === 'active' ? 'open' : proposalTab,
-      mode: viewMode !== 'octagon' ? viewMode : undefined,
+      mode: (viewMode !== 'octagon' && viewMode !== 'meetings') ? viewMode : undefined,
     },
   });
 
@@ -108,6 +112,22 @@ export default function Home() {
     variables: { limit: 6 },
     skip: !user,
   });
+
+  // Meeting-related queries
+  const { data: orgData } = useQuery(GET_MY_ORG, { skip: !user });
+  const hasOrg = !!orgData?.myOrg;
+  const { data: meetingRoomsData, refetch: refetchMeetingRooms } = useQuery(GET_MEETING_ROOMS, {
+    skip: !user || !hasOrg || viewMode !== 'meetings',
+  });
+  const [createMeetingRoom] = useMutation(CREATE_MEETING_ROOM, {
+    onCompleted: () => { refetchMeetingRooms(); setShowMeetingCreate(false); setMeetingRoomName(''); setMeetingRoomDesc(''); },
+  });
+  const [deleteMeetingRoom] = useMutation(DELETE_MEETING_ROOM, {
+    onCompleted: () => refetchMeetingRooms(),
+  });
+  const [showMeetingCreate, setShowMeetingCreate] = useState(false);
+  const [meetingRoomName, setMeetingRoomName] = useState('');
+  const [meetingRoomDesc, setMeetingRoomDesc] = useState('');
 
   // ========== Mutations ==========
   const [createDebateBoard, { loading: creating }] = useMutation(CREATE_DEBATE_BOARD, {
@@ -453,6 +473,7 @@ export default function Home() {
       <div className="mode-switcher">
         {[
           { key: 'info',    labelKey: 'home.modeInfo',    descKey: 'home.modeInfoDesc' },
+          ...(hasOrg ? [{ key: 'meetings', labelKey: 'home.modeMeetings', descKey: 'home.modeMeetingsDesc' }] : []),
           { key: 'battle',  labelKey: 'home.modeBattle',  descKey: 'home.modeBattleDesc' },
           { key: 'octagon', labelKey: 'board.modeOctagon', descKey: 'home.modeOctagonDesc' },
         ].map(({ key, labelKey, descKey }) => (
@@ -468,7 +489,7 @@ export default function Home() {
       </div>
 
       {/* ==================== SECTION 1: My Favourites ==================== */}
-      <section className="home-section">
+      {viewMode !== 'meetings' && <section className="home-section">
         <div className="home-section-header">
           <h2>{t('home.myFavourites')}</h2>
         </div>
@@ -506,10 +527,10 @@ export default function Home() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       {/* ==================== SECTION 1.5: Recommended for You ==================== */}
-      {user && recommendations.length > 0 && (
+      {viewMode !== 'meetings' && user && recommendations.length > 0 && (
         <section className="home-section">
           <div className="home-section-header">
             <h2>{t('home.recommendedForYou')}</h2>
@@ -539,7 +560,7 @@ export default function Home() {
       )}
 
       {/* ==================== SECTION 2: Debate Boards ==================== */}
-      <section className="home-section">
+      {viewMode !== 'meetings' && <section className="home-section">
         <div className="home-section-header">
           <h2>{boardsSectionTitle}</h2>
           <div className="home-section-controls">
@@ -769,10 +790,83 @@ export default function Home() {
             </div>
           )}
         </div>
-      </section>
+      </section>}
+
+      {/* ==================== SECTION: Meetings ==================== */}
+      {viewMode === 'meetings' && <section className="home-section">
+        <div className="home-section-header">
+          <h2>{t('home.meetingRooms')}</h2>
+          {user && (
+            <button className="btn-primary btn-small" onClick={() => setShowMeetingCreate(!showMeetingCreate)}>
+              {showMeetingCreate ? t('home.cancel') : t('home.createMeetingRoom')}
+            </button>
+          )}
+        </div>
+
+        {showMeetingCreate && (
+          <div className="create-form">
+            <input
+              type="text"
+              placeholder={t('home.meetingRoomNamePlaceholder')}
+              value={meetingRoomName}
+              onChange={(e) => setMeetingRoomName(e.target.value)}
+            />
+            <textarea
+              placeholder={t('home.meetingRoomDescPlaceholder')}
+              value={meetingRoomDesc}
+              onChange={(e) => setMeetingRoomDesc(e.target.value)}
+              rows={2}
+            />
+            <button
+              className="btn-primary"
+              disabled={!meetingRoomName.trim()}
+              onClick={() => createMeetingRoom({ variables: { name: meetingRoomName.trim(), description: meetingRoomDesc.trim() || undefined } })}
+            >
+              {t('home.create')}
+            </button>
+          </div>
+        )}
+
+        <div className="boards-grid">
+          {(meetingRoomsData?.meetingRooms || []).map((room) => (
+            <div
+              key={room.id}
+              className="board-card meeting-room-card"
+              onClick={() => navigate(`/meeting/${room.id}`)}
+            >
+              <div className="board-card-header">
+                <h3>{room.name}</h3>
+                {(isAdmin || room.createdBy === user?.id) && (
+                  <button
+                    className="btn-danger btn-small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(t('home.confirmDeleteMeetingRoom'))) {
+                        deleteMeetingRoom({ variables: { id: room.id } });
+                      }
+                    }}
+                  >
+                    {t('home.delete')}
+                  </button>
+                )}
+              </div>
+              {room.description && <p className="board-card-content">{room.description}</p>}
+              <div className="board-card-meta">
+                <span>{t('home.createdBy')} {room.createdByAlias}</span>
+                <span>{new Date(room.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ))}
+          {(!meetingRoomsData?.meetingRooms || meetingRoomsData.meetingRooms.length === 0) && (
+            <div className="no-results">
+              <p>{t('home.noMeetingRooms')}</p>
+            </div>
+          )}
+        </div>
+      </section>}
 
       {/* ==================== SECTION 3: Proposals (info + battle modes) ==================== */}
-      {viewMode !== 'octagon' && <section className="home-section">
+      {viewMode !== 'octagon' && viewMode !== 'meetings' && <section className="home-section">
         <div className="home-section-header">
           <h2>{t('home.proposals')}</h2>
           {user && (

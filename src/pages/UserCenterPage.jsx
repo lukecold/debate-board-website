@@ -12,6 +12,7 @@ import {
   GET_ALIAS_COOLDOWN,
   REQUEST_PASSWORD_CHANGE,
   CHANGE_ALIAS,
+  UPDATE_AVATAR,
 } from '../lib/userQueries';
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
@@ -55,6 +56,9 @@ export default function UserCenterPage() {
   const [pwRequestSent, setPwRequestSent] = useState(false);
   const [pwRequestLink, setPwRequestLink] = useState('');
   const [settingsError, setSettingsError] = useState('');
+  const [avatarUrlInput, setAvatarUrlInput] = useState('');
+  const [avatarSuccess, setAvatarSuccess] = useState('');
+  const [avatarError, setAvatarError] = useState('');
 
   // ── Queries ─────────────────────────────────────────────────────────────────
 
@@ -91,6 +95,13 @@ export default function UserCenterPage() {
   const [orgNameInput, setOrgNameInput] = useState('');
   const [orgNameDirty, setOrgNameDirty] = useState(false);
 
+  // Sync avatar URL input when user data loads
+  useEffect(() => {
+    if (me?.avatarUrl && !avatarUrlInput) {
+      setAvatarUrlInput(me.avatarUrl);
+    }
+  }, [me?.avatarUrl]);
+
   // Sync org name input when data loads
   useEffect(() => {
     if (orgData?.myOrg?.name && !orgNameDirty) {
@@ -116,6 +127,21 @@ export default function UserCenterPage() {
       setSettingsError('');
     },
     onError: (err) => setSettingsError(err.message),
+  });
+
+  const [updateAvatar, { loading: updatingAvatar }] = useMutation(UPDATE_AVATAR, {
+    client: userServiceClient,
+    onCompleted: (data) => {
+      const updatedUser = data.updateAvatar;
+      setAvatarSuccess('Avatar updated successfully');
+      setAvatarError('');
+      // Update auth state so avatar persists across the app
+      login({ token: localStorage.getItem('authToken'), user: { ...me, ...updatedUser } });
+    },
+    onError: (err) => {
+      setAvatarError(err.message);
+      setAvatarSuccess('');
+    },
   });
 
   const [changeAlias, { loading: changingAlias }] = useMutation(CHANGE_ALIAS, {
@@ -185,7 +211,11 @@ export default function UserCenterPage() {
     <div className="uc-page">
       {/* ── Profile header ────────────────────────────────────────────────── */}
       <div className="uc-profile-card">
-        <div className="uc-avatar">{profile.alias.charAt(0).toUpperCase()}</div>
+        <div className="uc-avatar">
+          {profile.avatarUrl
+            ? <img src={profile.avatarUrl} alt={profile.alias} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            : profile.alias.charAt(0).toUpperCase()}
+        </div>
         <div className="uc-profile-info">
           <h2 className="uc-alias">
             {profile.alias}
@@ -379,6 +409,39 @@ export default function UserCenterPage() {
                   <option key={code} value={code}>{label}</option>
                 ))}
               </select>
+            </section>
+
+            {/* ── Avatar ───────────────────────────────────────────────── */}
+            <section className="uc-settings-section">
+              <h3>Avatar</h3>
+              <p className="uc-settings-desc">Set a URL for your profile avatar image.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+                <div className="uc-avatar" style={{ width: '64px', height: '64px', fontSize: '28px', flexShrink: 0 }}>
+                  {avatarUrlInput
+                    ? <img src={avatarUrlInput} alt="avatar preview" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    : me?.alias?.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              {avatarError && <div className="auth-error">{avatarError}</div>}
+              {avatarSuccess && <div className="uc-success">{avatarSuccess}</div>}
+              <div className="form-group">
+                <label>Avatar URL</label>
+                <input
+                  type="url"
+                  className="form-input"
+                  value={avatarUrlInput}
+                  onChange={(e) => { setAvatarUrlInput(e.target.value); setAvatarSuccess(''); setAvatarError(''); }}
+                  placeholder="https://example.com/avatar.png"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <button
+                className="btn-primary uc-settings-btn"
+                disabled={updatingAvatar || !avatarUrlInput}
+                onClick={() => updateAvatar({ variables: { avatarUrl: avatarUrlInput } })}
+              >
+                {updatingAvatar ? t('uc.saving') : t('uc.save')}
+              </button>
             </section>
 
             {/* ── Password change ─────────────────────────────────────── */}

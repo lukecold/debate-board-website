@@ -252,6 +252,34 @@ export const translations = {
     'args.retranslateComment': 'Describe what to improve in the translation...',
     'args.retranslating': 'Re-translating...',
     'args.retranslateSubmit': 'Re-translate',
+
+    // Home - Meetings
+    'home.modeMeetings': 'Meetings',
+    'home.modeMeetingsDesc': 'Collaborate with your team',
+    'home.meetingRooms': 'Meeting Rooms',
+    'home.createMeetingRoom': 'New Room',
+    'home.meetingRoomNamePlaceholder': 'Room name',
+    'home.meetingRoomDescPlaceholder': 'Description (optional)',
+    'home.confirmDeleteMeetingRoom': 'Delete this meeting room and all its messages?',
+    'home.noMeetingRooms': 'No meeting rooms yet. Create one to get started.',
+    'home.createdBy': 'Created by',
+    'home.create': 'Create',
+    'home.delete': 'Delete',
+
+    // Meetings
+    'meetings.showSummary': 'Show Summary',
+    'meetings.hideSummary': 'Hide Summary',
+    'meetings.generating': 'Generating summary...',
+    'meetings.noSummary': 'No summary yet. Start a conversation to generate one.',
+    'meetings.typeMessage': 'Type a message...',
+    'meetings.send': 'Send',
+    'meetings.replies': 'replies',
+    'meetings.reply': 'Reply',
+    'meetings.hideReplies': 'Hide replies',
+    'meetings.deleteRoom': 'Delete Room',
+    'meetings.backToRooms': 'Back',
+    'meetings.threadReplyTo': 'Replying to thread',
+    'meetings.cancelReply': 'Cancel',
   },
 
   zh: {
@@ -505,6 +533,34 @@ export const translations = {
     'args.retranslateComment': '描述需要改进的翻译内容...',
     'args.retranslating': '重新翻译中...',
     'args.retranslateSubmit': '重新翻译',
+
+    // Home - Meetings
+    'home.modeMeetings': '会议',
+    'home.modeMeetingsDesc': '与团队协作',
+    'home.meetingRooms': '会议室',
+    'home.createMeetingRoom': '新建房间',
+    'home.meetingRoomNamePlaceholder': '房间名称',
+    'home.meetingRoomDescPlaceholder': '描述（可选）',
+    'home.confirmDeleteMeetingRoom': '删除此会议室及其所有消息？',
+    'home.noMeetingRooms': '暂无会议室。创建一个开始吧。',
+    'home.createdBy': '创建者',
+    'home.create': '创建',
+    'home.delete': '删除',
+
+    // Meetings
+    'meetings.showSummary': '显示摘要',
+    'meetings.hideSummary': '隐藏摘要',
+    'meetings.generating': '正在生成摘要...',
+    'meetings.noSummary': '暂无摘要。开始对话以生成摘要。',
+    'meetings.typeMessage': '输入消息...',
+    'meetings.send': '发送',
+    'meetings.replies': '条回复',
+    'meetings.reply': '回复',
+    'meetings.hideReplies': '隐藏回复',
+    'meetings.deleteRoom': '删除房间',
+    'meetings.backToRooms': '返回',
+    'meetings.threadReplyTo': '回复主题',
+    'meetings.cancelReply': '取消',
   },
 
   es: {
@@ -758,6 +814,34 @@ export const translations = {
     'args.retranslateComment': 'Describe qué mejorar en la traducción...',
     'args.retranslating': 'Retraduciendo...',
     'args.retranslateSubmit': 'Retraducir',
+
+    // Home - Meetings
+    'home.modeMeetings': 'Reuniones',
+    'home.modeMeetingsDesc': 'Colabora con tu equipo',
+    'home.meetingRooms': 'Salas de reunión',
+    'home.createMeetingRoom': 'Nueva sala',
+    'home.meetingRoomNamePlaceholder': 'Nombre de la sala',
+    'home.meetingRoomDescPlaceholder': 'Descripción (opcional)',
+    'home.confirmDeleteMeetingRoom': '¿Eliminar esta sala de reunión y todos sus mensajes?',
+    'home.noMeetingRooms': 'Aún no hay salas de reunión. Crea una para comenzar.',
+    'home.createdBy': 'Creado por',
+    'home.create': 'Crear',
+    'home.delete': 'Eliminar',
+
+    // Meetings
+    'meetings.showSummary': 'Mostrar resumen',
+    'meetings.hideSummary': 'Ocultar resumen',
+    'meetings.generating': 'Generando resumen...',
+    'meetings.noSummary': 'Aún no hay resumen. Inicia una conversación para generar uno.',
+    'meetings.typeMessage': 'Escribe un mensaje...',
+    'meetings.send': 'Enviar',
+    'meetings.replies': 'respuestas',
+    'meetings.reply': 'Responder',
+    'meetings.hideReplies': 'Ocultar respuestas',
+    'meetings.deleteRoom': 'Eliminar sala',
+    'meetings.backToRooms': 'Volver',
+    'meetings.threadReplyTo': 'Respondiendo al hilo',
+    'meetings.cancelReply': 'Cancelar',
   },
 
   fr: {
@@ -1011,6 +1095,34 @@ export const translations = {
     'args.retranslateComment': 'Décrivez ce qu\'il faut améliorer dans la traduction...',
     'args.retranslating': 'Retraduction en cours...',
     'args.retranslateSubmit': 'Retraduire',
+
+    // Home - Meetings
+    'home.modeMeetings': 'Réunions',
+    'home.modeMeetingsDesc': 'Collaborez avec votre équipe',
+    'home.meetingRooms': 'Salles de réunion',
+    'home.createMeetingRoom': 'Nouvelle salle',
+    'home.meetingRoomNamePlaceholder': 'Nom de la salle',
+    'home.meetingRoomDescPlaceholder': 'Description (optionnel)',
+    'home.confirmDeleteMeetingRoom': 'Supprimer cette salle de réunion et tous ses messages ?',
+    'home.noMeetingRooms': 'Aucune salle de réunion pour le moment. Créez-en une pour commencer.',
+    'home.createdBy': 'Créé par',
+    'home.create': 'Créer',
+    'home.delete': 'Supprimer',
+
+    // Meetings
+    'meetings.showSummary': 'Afficher le résumé',
+    'meetings.hideSummary': 'Masquer le résumé',
+    'meetings.generating': 'Génération du résumé...',
+    'meetings.noSummary': 'Pas encore de résumé. Démarrez une conversation pour en générer un.',
+    'meetings.typeMessage': 'Tapez un message...',
+    'meetings.send': 'Envoyer',
+    'meetings.replies': 'réponses',
+    'meetings.reply': 'Répondre',
+    'meetings.hideReplies': 'Masquer les réponses',
+    'meetings.deleteRoom': 'Supprimer la salle',
+    'meetings.backToRooms': 'Retour',
+    'meetings.threadReplyTo': 'Réponse au fil',
+    'meetings.cancelReply': 'Annuler',
   },
 
   ja: {
@@ -1264,6 +1376,34 @@ export const translations = {
     'args.retranslateComment': '翻訳の改善点を説明してください...',
     'args.retranslating': '再翻訳中...',
     'args.retranslateSubmit': '再翻訳',
+
+    // Home - Meetings
+    'home.modeMeetings': 'ミーティング',
+    'home.modeMeetingsDesc': 'チームとコラボレーション',
+    'home.meetingRooms': 'ミーティングルーム',
+    'home.createMeetingRoom': '新規ルーム',
+    'home.meetingRoomNamePlaceholder': 'ルーム名',
+    'home.meetingRoomDescPlaceholder': '説明（任意）',
+    'home.confirmDeleteMeetingRoom': 'このミーティングルームとすべてのメッセージを削除しますか？',
+    'home.noMeetingRooms': 'ミーティングルームはまだありません。作成して始めましょう。',
+    'home.createdBy': '作成者',
+    'home.create': '作成',
+    'home.delete': '削除',
+
+    // Meetings
+    'meetings.showSummary': '要約を表示',
+    'meetings.hideSummary': '要約を非表示',
+    'meetings.generating': '要約を生成中...',
+    'meetings.noSummary': 'まだ要約がありません。会話を始めて生成しましょう。',
+    'meetings.typeMessage': 'メッセージを入力...',
+    'meetings.send': '送信',
+    'meetings.replies': '件の返信',
+    'meetings.reply': '返信',
+    'meetings.hideReplies': '返信を非表示',
+    'meetings.deleteRoom': 'ルームを削除',
+    'meetings.backToRooms': '戻る',
+    'meetings.threadReplyTo': 'スレッドに返信中',
+    'meetings.cancelReply': 'キャンセル',
   },
 
   th: {
@@ -1517,6 +1657,34 @@ export const translations = {
     'args.retranslateComment': 'อธิบายสิ่งที่ต้องการปรับปรุงในการแปล...',
     'args.retranslating': 'กำลังแปลใหม่...',
     'args.retranslateSubmit': 'แปลใหม่',
+
+    // Home - Meetings
+    'home.modeMeetings': 'การประชุม',
+    'home.modeMeetingsDesc': 'ทำงานร่วมกับทีมของคุณ',
+    'home.meetingRooms': 'ห้องประชุม',
+    'home.createMeetingRoom': 'ห้องใหม่',
+    'home.meetingRoomNamePlaceholder': 'ชื่อห้อง',
+    'home.meetingRoomDescPlaceholder': 'คำอธิบาย (ไม่บังคับ)',
+    'home.confirmDeleteMeetingRoom': 'ลบห้องประชุมนี้และข้อความทั้งหมดหรือไม่?',
+    'home.noMeetingRooms': 'ยังไม่มีห้องประชุม สร้างห้องเพื่อเริ่มต้น',
+    'home.createdBy': 'สร้างโดย',
+    'home.create': 'สร้าง',
+    'home.delete': 'ลบ',
+
+    // Meetings
+    'meetings.showSummary': 'แสดงสรุป',
+    'meetings.hideSummary': 'ซ่อนสรุป',
+    'meetings.generating': 'กำลังสร้างสรุป...',
+    'meetings.noSummary': 'ยังไม่มีสรุป เริ่มการสนทนาเพื่อสร้างสรุป',
+    'meetings.typeMessage': 'พิมพ์ข้อความ...',
+    'meetings.send': 'ส่ง',
+    'meetings.replies': 'การตอบกลับ',
+    'meetings.reply': 'ตอบกลับ',
+    'meetings.hideReplies': 'ซ่อนการตอบกลับ',
+    'meetings.deleteRoom': 'ลบห้อง',
+    'meetings.backToRooms': 'กลับ',
+    'meetings.threadReplyTo': 'กำลังตอบกลับเธรด',
+    'meetings.cancelReply': 'ยกเลิก',
   },
 
   ru: {
@@ -1770,6 +1938,34 @@ export const translations = {
     'args.retranslateComment': 'Опишите, что нужно улучшить в переводе...',
     'args.retranslating': 'Повторный перевод...',
     'args.retranslateSubmit': 'Перевести заново',
+
+    // Home - Meetings
+    'home.modeMeetings': 'Встречи',
+    'home.modeMeetingsDesc': 'Сотрудничайте с командой',
+    'home.meetingRooms': 'Комнаты встреч',
+    'home.createMeetingRoom': 'Новая комната',
+    'home.meetingRoomNamePlaceholder': 'Название комнаты',
+    'home.meetingRoomDescPlaceholder': 'Описание (необязательно)',
+    'home.confirmDeleteMeetingRoom': 'Удалить эту комнату и все сообщения?',
+    'home.noMeetingRooms': 'Комнат пока нет. Создайте одну, чтобы начать.',
+    'home.createdBy': 'Создано',
+    'home.create': 'Создать',
+    'home.delete': 'Удалить',
+
+    // Meetings
+    'meetings.showSummary': 'Показать резюме',
+    'meetings.hideSummary': 'Скрыть резюме',
+    'meetings.generating': 'Генерация резюме...',
+    'meetings.noSummary': 'Резюме пока нет. Начните беседу, чтобы создать его.',
+    'meetings.typeMessage': 'Введите сообщение...',
+    'meetings.send': 'Отправить',
+    'meetings.replies': 'ответов',
+    'meetings.reply': 'Ответить',
+    'meetings.hideReplies': 'Скрыть ответы',
+    'meetings.deleteRoom': 'Удалить комнату',
+    'meetings.backToRooms': 'Назад',
+    'meetings.threadReplyTo': 'Ответ в теме',
+    'meetings.cancelReply': 'Отмена',
   },
 
   ko: {
@@ -2023,5 +2219,33 @@ export const translations = {
     'args.retranslateComment': '번역에서 개선할 점을 설명하세요...',
     'args.retranslating': '재번역 중...',
     'args.retranslateSubmit': '재번역',
+
+    // Home - Meetings
+    'home.modeMeetings': '미팅',
+    'home.modeMeetingsDesc': '팀과 협업하기',
+    'home.meetingRooms': '미팅 룸',
+    'home.createMeetingRoom': '새 룸',
+    'home.meetingRoomNamePlaceholder': '룸 이름',
+    'home.meetingRoomDescPlaceholder': '설명 (선택사항)',
+    'home.confirmDeleteMeetingRoom': '이 미팅 룸과 모든 메시지를 삭제하시겠습니까?',
+    'home.noMeetingRooms': '아직 미팅 룸이 없습니다. 하나를 만들어 시작하세요.',
+    'home.createdBy': '만든 사람',
+    'home.create': '만들기',
+    'home.delete': '삭제',
+
+    // Meetings
+    'meetings.showSummary': '요약 보기',
+    'meetings.hideSummary': '요약 숨기기',
+    'meetings.generating': '요약 생성 중...',
+    'meetings.noSummary': '아직 요약이 없습니다. 대화를 시작하여 생성하세요.',
+    'meetings.typeMessage': '메시지를 입력하세요...',
+    'meetings.send': '보내기',
+    'meetings.replies': '개의 답글',
+    'meetings.reply': '답글',
+    'meetings.hideReplies': '답글 숨기기',
+    'meetings.deleteRoom': '룸 삭제',
+    'meetings.backToRooms': '뒤로',
+    'meetings.threadReplyTo': '스레드에 답글 작성 중',
+    'meetings.cancelReply': '취소',
   },
 };

@@ -17,6 +17,7 @@ export const COMPLETE_REGISTRATION = gql`
         email
         alias
         role
+        avatarUrl
         contributionScore
         battlePoints
         createdAt
@@ -34,6 +35,7 @@ export const LOGIN = gql`
         email
         alias
         role
+        avatarUrl
         contributionScore
         battlePoints
         createdAt
@@ -49,6 +51,7 @@ export const ME = gql`
       email
       alias
       role
+      avatarUrl
       contributionScore
       battlePoints
       createdAt
@@ -63,6 +66,7 @@ export const GET_PUBLIC_USER = gql`
       id
       alias
       role
+      avatarUrl
       contributionScore
       battlePoints
       createdAt
@@ -105,5 +109,27 @@ export const CHANGE_ALIAS = gql`
 export const SEARCH_USERS_BY_ALIAS_PREFIX = gql`
   query SearchUsersByAliasPrefix($prefix: String!, $limit: Int) {
     searchUsersByAliasPrefix(prefix: $prefix, limit: $limit)
+  }
+`;
+
+// Org-scoped autocomplete: find aliases of users in the same org.
+export const SEARCH_ORG_MEMBERS_BY_ALIAS_PREFIX = gql`
+  query SearchOrgMembersByAliasPrefix($emailDomain: String!, $prefix: String!, $limit: Int) {
+    searchOrgMembersByAliasPrefix(emailDomain: $emailDomain, prefix: $prefix, limit: $limit)
+  }
+`;
+
+export const UPDATE_AVATAR = gql`
+  mutation UpdateAvatar($avatarUrl: String!) {
+    updateAvatar(avatarUrl: $avatarUrl) {
+      id
+      email
+      alias
+      role
+      avatarUrl
+      contributionScore
+      battlePoints
+      createdAt
+    }
   }
 `;
