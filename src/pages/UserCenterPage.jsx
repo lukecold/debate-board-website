@@ -4,7 +4,8 @@ import { useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { client, userServiceClient } from '../lib/apollo';
-import { GET_USER_ACTIVITY, GET_MY_OCTAGON_INVITES, RESPOND_TO_OCTAGON_INVITE } from '../lib/queries';
+import { GET_USER_ACTIVITY, GET_MY_OCTAGON_INVITES, RESPOND_TO_OCTAGON_INVITE, GET_MY_ORG, UPDATE_ORG_SETTINGS } from '../lib/queries';
+import { isAdminRole } from '../lib/roles';
 import {
   GET_PUBLIC_USER,
   GET_ALIAS_COOLDOWN,
@@ -79,6 +80,22 @@ export default function UserCenterPage() {
     skip: !isOwnProfile,
     fetchPolicy: 'network-only',
   });
+
+  // Org settings (own profile, admin roles only)
+  const { data: orgData, refetch: refetchOrg } = useQuery(GET_MY_ORG, {
+    client,
+    skip: !isOwnProfile || !isAdminRole(me?.role),
+  });
+  const [updateOrgSettings, { loading: updatingOrg }] = useMutation(UPDATE_ORG_SETTINGS, { client });
+  const [orgNameInput, setOrgNameInput] = useState('');
+  const [orgNameDirty, setOrgNameDirty] = useState(false);
+
+  // Sync org name input when data loads
+  useEffect(() => {
+    if (orgData?.myOrg?.name && !orgNameDirty) {
+      setOrgNameInput(orgData.myOrg.name);
+    }
+  }, [orgData?.myOrg?.name, orgNameDirty]);
 
   const [respondToOctagonInvite] = useMutation(RESPOND_TO_OCTAGON_INVITE, {
     client,
@@ -159,6 +176,8 @@ export default function UserCenterPage() {
     ...(isOwnProfile ? [{ key: 'invites', label: t('uc.octagonInvites') }] : []),
     // Settings tab: own profile only
     ...(isOwnProfile ? [{ key: 'settings', label: t('uc.tabSettings') }] : []),
+    // Org tab: own profile only, for admin-role users
+    ...(isOwnProfile && isAdminRole(me?.role) ? [{ key: 'org', label: t('uc.tabOrg') }] : []),
   ];
 
   return (
@@ -169,7 +188,11 @@ export default function UserCenterPage() {
         <div className="uc-profile-info">
           <h2 className="uc-alias">
             {profile.alias}
-            {profile.isAdmin && <span className="admin-badge">{t('header.admin')}</span>}
+            {profile.role && profile.role !== 'user' && (
+              <span className={`role-badge role-${profile.role === 'org_admin' ? 'org-admin' : profile.role}`}>
+                {profile.role === 'owner' ? 'Owner' : profile.role === 'admin' ? 'Admin' : profile.role === 'org_admin' ? 'Org Admin' : ''}
+              </span>
+            )}
           </h2>
           <p className="uc-score">{t('uc.contributionScore')}: <strong>{profile.contributionScore}</strong></p>
           {(profile.battlePoints > 0 || isOwnProfile) && (
@@ -414,6 +437,87 @@ export default function UserCenterPage() {
             </section>
           </div>
         )}
+        {/* Org Settings */}
+        {tab === 'org' && isOwnProfile && orgData?.myOrg && (() => {
+          const org = orgData.myOrg;
+          const handleOrgToggle = async (field, currentValue) => {
+            await updateOrgSettings({ variables: { [field]: !currentValue } });
+            refetchOrg();
+          };
+          const handleOrgNameSave = async () => {
+            await updateOrgSettings({ variables: { name: orgNameInput } });
+            setOrgNameDirty(false);
+            refetchOrg();
+          };
+          return (
+            <div className="cc-settings">
+              <div className="cc-domain">
+                <span className="cc-domain-label">{t('controlCenter.orgDomain')}</span>
+                <span className="cc-domain-value">{org.emailDomain}</span>
+              </div>
+
+              <div className="cc-setting-card">
+                <div className="cc-setting-header">
+                  <div className="cc-setting-text">
+                    <h3>{t('controlCenter.orgName')}</h3>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={orgNameInput}
+                      onChange={(e) => { setOrgNameInput(e.target.value); setOrgNameDirty(true); }}
+                      style={{ width: '200px' }}
+                    />
+                    <button
+                      className="btn-primary btn-small"
+                      onClick={handleOrgNameSave}
+                      disabled={updatingOrg || !orgNameDirty}
+                    >
+                      {t('uc.save')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="cc-setting-card">
+                <div className="cc-setting-header">
+                  <div className="cc-setting-text">
+                    <h3>{t('controlCenter.exposeToPublic')}</h3>
+                    <p>{t('controlCenter.exposeToPublicDesc')}</p>
+                  </div>
+                  <label className="cc-toggle">
+                    <input
+                      type="checkbox"
+                      checked={org.exposeToPublic}
+                      onChange={() => handleOrgToggle('exposeToPublic', org.exposeToPublic)}
+                      disabled={updatingOrg}
+                    />
+                    <span className="cc-toggle-slider" />
+                  </label>
+                </div>
+              </div>
+
+              <div className="cc-setting-card">
+                <div className="cc-setting-header">
+                  <div className="cc-setting-text">
+                    <h3>{t('controlCenter.showPublicToOrg')}</h3>
+                    <p>{t('controlCenter.showPublicToOrgDesc')}</p>
+                  </div>
+                  <label className="cc-toggle">
+                    <input
+                      type="checkbox"
+                      checked={org.showPublicToOrg}
+                      onChange={() => handleOrgToggle('showPublicToOrg', org.showPublicToOrg)}
+                      disabled={updatingOrg}
+                    />
+                    <span className="cc-toggle-slider" />
+                  </label>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

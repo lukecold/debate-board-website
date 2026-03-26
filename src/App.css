@@ -827,15 +827,32 @@ body {
   font-weight: 500;
 }
 
-.admin-badge {
+.admin-badge,
+.role-badge {
   display: inline-block;
-  background: #7c3aed;
   color: white;
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 10px;
   margin-left: 8px;
+  vertical-align: middle;
+}
+
+.admin-badge,
+.role-admin { background: #7c3aed; }
+.role-owner { background: #dc2626; }
+.role-org-admin { background: #2563eb; }
+
+.org-name-badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 8px;
+  margin-left: 10px;
   vertical-align: middle;
 }
 
@@ -2509,4 +2526,132 @@ body {
 .alias-suggestion-item:hover {
   background: #fecaca;
   color: #cc0000;
+}
+
+/* ── Control Center ─────────────────────────────────────────────────────── */
+
+.cc-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.cc-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 28px;
+  color: #111827;
+}
+
+.cc-no-org {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.cc-no-org p {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.cc-domain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+}
+
+.cc-domain-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.cc-domain-value {
+  color: #2563eb;
+  font-weight: 500;
+  font-family: monospace;
+}
+
+.cc-setting-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.cc-setting-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.cc-setting-text h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.cc-setting-text p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Toggle switch */
+.cc-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.cc-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cc-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 26px;
+  transition: 0.2s;
+}
+
+.cc-toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.cc-toggle input:checked + .cc-toggle-slider {
+  background-color: #2563eb;
+}
+
+.cc-toggle input:checked + .cc-toggle-slider::before {
+  transform: translateX(22px);
+}
+
+.cc-toggle input:disabled + .cc-toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

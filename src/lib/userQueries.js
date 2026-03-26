@@ -16,7 +16,7 @@ export const COMPLETE_REGISTRATION = gql`
         id
         email
         alias
-        isAdmin
+        role
         contributionScore
         battlePoints
         createdAt
@@ -33,7 +33,7 @@ export const LOGIN = gql`
         id
         email
         alias
-        isAdmin
+        role
         contributionScore
         battlePoints
         createdAt
@@ -48,7 +48,7 @@ export const ME = gql`
       id
       email
       alias
-      isAdmin
+      role
       contributionScore
       battlePoints
       createdAt
@@ -62,7 +62,7 @@ export const GET_PUBLIC_USER = gql`
     getUser(userID: $userID) {
       id
       alias
-      isAdmin
+      role
       contributionScore
       battlePoints
       createdAt

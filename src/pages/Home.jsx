@@ -21,6 +21,7 @@ import {
   UPDATE_BOARD_MODE,
   UPDATE_PROPOSAL_MODE,
   CHECK_OCTAGON_ELIGIBILITY,
+  GET_RECOMMENDATIONS,
 } from '../lib/queries';
 import { SEARCH_USERS_BY_ALIAS_PREFIX } from '../lib/userQueries';
 import { userServiceClient } from '../lib/apollo';
@@ -63,7 +64,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, tTag, language, targetLanguage } = useLanguage();
-  const isAdmin = user?.isAdmin;
+  const isAdmin = user?.role === 'owner' || user?.role === 'admin' || user?.role === 'org_admin';
 
   // Proposal translation state: map keyed by `${proposalId}_${field}`
   const [proposalTranslations, setProposalTranslations] = useState({});
@@ -101,6 +102,11 @@ export default function Home() {
       status: proposalTab === 'active' ? 'open' : proposalTab,
       mode: viewMode !== 'octagon' ? viewMode : undefined,
     },
+  });
+
+  const { data: recsData } = useQuery(GET_RECOMMENDATIONS, {
+    variables: { limit: 6 },
+    skip: !user,
   });
 
   // ========== Mutations ==========
@@ -431,6 +437,7 @@ export default function Home() {
   };
 
   const filteredFavourites = effectiveFavourites.filter(f => f.mode === viewMode);
+  const recommendations = (recsData?.recommendations || []).filter(r => r.mode === viewMode);
   const userId = user?.id;
 
   const boardsSectionTitle = viewMode === 'battle'
@@ -500,6 +507,36 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* ==================== SECTION 1.5: Recommended for You ==================== */}
+      {user && recommendations.length > 0 && (
+        <section className="home-section">
+          <div className="home-section-header">
+            <h2>{t('home.recommendedForYou')}</h2>
+          </div>
+          <div className="favourites-row">
+            {recommendations.map((board) => (
+              <div
+                key={board.debateBoardID}
+                className="board-card fav-card"
+                onClick={() => navigate(`/board/${board.debateBoardID}`)}
+              >
+                {board.mode === 'octagon' && <span className="mode-badge-octagon">{t('board.modeOctagon')}</span>}
+                {board.mode === 'battle' && <span className="mode-badge-battle">{t('board.modeBattle')}</span>}
+                <h3>{board.title}</h3>
+                <p className="board-preview">
+                  {board.content ? board.content.substring(0, 100) + '...' : t('home.contentGenerating')}
+                </p>
+                {board.features && board.features.length > 0 && (
+                  <div className="board-card-tags">
+                    {board.features.map(f => <span key={f} className="tag-chip">{tTag(f)}</span>)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ==================== SECTION 2: Debate Boards ==================== */}
       <section className="home-section">

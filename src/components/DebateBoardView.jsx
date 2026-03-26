@@ -17,6 +17,7 @@ import {
   RETRANSLATE_CONTENT,
   UPDATE_DEBATE_BOARD_FEATURES,
   RESPOND_TO_OCTAGON_INVITE,
+  RECORD_VIEW,
 } from '../lib/queries';
 import ArgumentList from './ArgumentList';
 import { useAuth } from '../contexts/AuthContext';
@@ -103,6 +104,14 @@ export default function DebateBoardView({ boardId }) {
       navigate('/');
     },
   });
+
+  const [recordView] = useMutation(RECORD_VIEW);
+
+  useEffect(() => {
+    if (user && boardId) {
+      recordView({ variables: { debateBoardID: boardId } }).catch(() => {});
+    }
+  }, [boardId, user, recordView]);
 
   const [deleteArgument] = useMutation(DELETE_ARGUMENT, {
     onCompleted: () => refetch(),

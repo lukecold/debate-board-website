@@ -417,3 +417,66 @@ export const CHECK_OCTAGON_ELIGIBILITY = gql`
     checkOctagonEligibility
   }
 `;
+
+// ========== Recommendations ==========
+
+export const GET_RECOMMENDATIONS = gql`
+  query GetRecommendations($limit: Int) {
+    recommendations(limit: $limit) {
+      debateBoardID
+      title
+      content
+      features
+      isFavourited
+      mode
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const RECORD_VIEW = gql`
+  mutation RecordView($debateBoardID: ID!) {
+    recordView(debateBoardID: $debateBoardID)
+  }
+`;
+
+// ── Org ──────────────────────────────────────────────────────────────────────
+
+export const GET_MY_ORG = gql`
+  query GetMyOrg {
+    myOrg {
+      id
+      emailDomain
+      name
+      exposeToPublic
+      showPublicToOrg
+      createdAt
+    }
+  }
+`;
+
+export const CREATE_ORG = gql`
+  mutation CreateOrg($name: String) {
+    createOrg(name: $name) {
+      id
+      emailDomain
+      name
+      exposeToPublic
+      showPublicToOrg
+      createdAt
+    }
+  }
+`;
+
+export const UPDATE_ORG_SETTINGS = gql`
+  mutation UpdateOrgSettings($name: String, $exposeToPublic: Boolean, $showPublicToOrg: Boolean) {
+    updateOrgSettings(name: $name, exposeToPublic: $exposeToPublic, showPublicToOrg: $showPublicToOrg) {
+      id
+      emailDomain
+      name
+      exposeToPublic
+      showPublicToOrg
+    }
+  }
+`;
