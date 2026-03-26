@@ -25,8 +25,8 @@ export default function Header() {
 
   return (
     <header className="app-header">
-      <div className="header-left" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-        <h2>{t('header.title')}</h2>
+      <div className="header-left">
+        <h2 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>{t('header.title')}</h2>
         {orgName && <span className="org-name-badge">{orgName}</span>}
       </div>
       <div className="header-right">
