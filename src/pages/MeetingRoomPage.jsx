@@ -68,6 +68,9 @@ export default function MeetingRoomPage() {
   const [replyToThread, setReplyToThread] = useState(null);
   const [expandedThreads, setExpandedThreads] = useState({});
 
+  // Track IME composition state to prevent sending during character selection
+  const isComposingRef = useRef(false);
+
   // Track optimistic message IDs so subscription can detect replacements
   const optimisticIdsRef = useRef(new Set());
 
@@ -279,7 +282,7 @@ export default function MeetingRoomPage() {
     }
 
     // Enter to send (without Shift, and not during IME composition)
-    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+    if (e.key === 'Enter' && !e.shiftKey && !isComposingRef.current && e.keyCode !== 229) {
       e.preventDefault();
       handleSend();
     }
@@ -742,6 +745,8 @@ export default function MeetingRoomPage() {
                           value={messageText}
                           onChange={handleTextareaChange}
                           onKeyDown={handleTextareaKeyDown}
+                          onCompositionStart={() => { isComposingRef.current = true; }}
+                          onCompositionEnd={() => { isComposingRef.current = false; }}
                           placeholder={t('meetings.typeMessage')}
                           rows={1}
                           autoFocus
@@ -784,6 +789,8 @@ export default function MeetingRoomPage() {
                   value={messageText}
                   onChange={handleTextareaChange}
                   onKeyDown={handleTextareaKeyDown}
+                  onCompositionStart={() => { isComposingRef.current = true; }}
+                  onCompositionEnd={() => { isComposingRef.current = false; }}
                   placeholder={t('meetings.typeMessage')}
                   rows={1}
                 />
