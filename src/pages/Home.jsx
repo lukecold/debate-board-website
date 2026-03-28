@@ -117,7 +117,7 @@ export default function Home() {
   const { data: orgData } = useQuery(GET_MY_ORG, { skip: !user });
   const hasOrg = !!orgData?.myOrg;
   const { data: meetingRoomsData, refetch: refetchMeetingRooms } = useQuery(GET_MEETING_ROOMS, {
-    skip: !user || !hasOrg || viewMode !== 'meetings',
+    skip: !user || (!hasOrg && !isAdmin) || viewMode !== 'meetings',
   });
   const [createMeetingRoom] = useMutation(CREATE_MEETING_ROOM, {
     onCompleted: () => { refetchMeetingRooms(); setShowMeetingCreate(false); setMeetingRoomName(''); setMeetingRoomDesc(''); },
@@ -473,7 +473,7 @@ export default function Home() {
       <div className="mode-switcher">
         {[
           { key: 'info',    labelKey: 'home.modeInfo',    descKey: 'home.modeInfoDesc' },
-          ...(hasOrg ? [{ key: 'meetings', labelKey: 'home.modeMeetings', descKey: 'home.modeMeetingsDesc' }] : []),
+          ...((hasOrg || isAdmin) ? [{ key: 'meetings', labelKey: 'home.modeMeetings', descKey: 'home.modeMeetingsDesc' }] : []),
           { key: 'battle',  labelKey: 'home.modeBattle',  descKey: 'home.modeBattleDesc' },
           { key: 'octagon', labelKey: 'board.modeOctagon', descKey: 'home.modeOctagonDesc' },
         ].map(({ key, labelKey, descKey }) => (
